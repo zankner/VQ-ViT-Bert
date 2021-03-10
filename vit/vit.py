@@ -99,7 +99,6 @@ class ViT(nn.Module):
                  depth,
                  heads,
                  mlp_dim,
-                 num_token,
                  vocab_size,
                  embedding_dim,
                  dim_head=64,
@@ -108,8 +107,7 @@ class ViT(nn.Module):
         super(ViT, self).__init__()
 
         self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.pos_embedding = nn.Parameter(
-            torch.randn(1, num_token, embedding_dim))
+        self.pos_embedding = nn.Parameter(torch.randn(1, 1, embedding_dim))
         self.embedding_transform = nn.Linear(embedding_dim, dim)
         self.dropout = nn.Dropout(emb_dropout)
 

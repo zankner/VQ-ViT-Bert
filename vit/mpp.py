@@ -38,7 +38,7 @@ def get_mask_subset_with_prob(mask, prob):
 # main class
 
 
-class MLM(nn.Module):
+class MPP(nn.Module):
     def __init__(self,
                  transformer,
                  mask_prob=0.15,
@@ -55,9 +55,9 @@ class MLM(nn.Module):
         # mlm related probabilities
         self.mask_prob = mask_prob
         self.replace_prob = replace_prob
+        self.random_token_prob = random_token_prob
 
         self.num_tokens = num_tokens
-        self.random_token_prob = random_token_prob
 
         # token ids
         self.pad_token_id = pad_token_id
@@ -105,5 +105,4 @@ class MLM(nn.Module):
         mlm_loss = F.cross_entropy(logits.transpose(1, 2),
                                    labels,
                                    ignore_index=self.pad_token_id)
-
         return mlm_loss
