@@ -48,7 +48,10 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
 
         # Input conv
-        self.input_conv = nn.Conv2d(channels, feature_dim, kernel_size=7)
+        self.input_conv = nn.Conv2d(channels,
+                                    feature_dim,
+                                    kernel_size=7,
+                                    padding=3)
 
         # Blocks
         self.blocks = nn.Sequential(
@@ -58,7 +61,8 @@ class Encoder(nn.Module):
                      OrderedDict([
                          *[(f'block_{i+1}',
                             ResBlock(1 * feature_dim, 1 * feature_dim))
-                           for i in range(num_blocks)]
+                           for i in range(num_blocks)],
+                         ('pool', nn.MaxPool2d(kernel_size=2))
                      ]))),
                 ('group_2',
                  nn.Sequential(
@@ -66,7 +70,8 @@ class Encoder(nn.Module):
                          *[(f'block_{i+1}',
                             ResBlock(
                                 1 * feature_dim if i == 0 else 2 * feature_dim,
-                                2 * feature_dim)) for i in range(num_blocks)]
+                                2 * feature_dim)) for i in range(num_blocks)],
+                         ('pool', nn.MaxPool2d(kernel_size=2))
                      ]))),
                 ('group_3',
                  nn.Sequential(
@@ -74,7 +79,8 @@ class Encoder(nn.Module):
                          *[(f'block_{i+1}',
                             ResBlock(
                                 2 * feature_dim if i == 0 else 4 * feature_dim,
-                                4 * feature_dim)) for i in range(num_blocks)]
+                                4 * feature_dim)) for i in range(num_blocks)],
+                         ('pool', nn.MaxPool2d(kernel_size=2))
                      ]))),
                 ('group_4',
                  nn.Sequential(
@@ -82,7 +88,8 @@ class Encoder(nn.Module):
                          *[(f'block_{i+1}',
                             ResBlock(
                                 4 * feature_dim if i == 0 else 8 * feature_dim,
-                                8 * feature_dim)) for i in range(num_blocks)]
+                                8 * feature_dim)) for i in range(num_blocks)],
+                         ('pool', nn.MaxPool2d(kernel_size=2))
                      ])))
             ]))
 
@@ -101,5 +108,74 @@ class Encoder(nn.Module):
         x = self.blocks(x)
 
         x = self.output_conv(x)
+        return x
 
+
+class Decoder(nn.Module):
+    def __init__(self, vocab_size, num_blocks=2, feature_dim=64, channels=3):
+        super(Decoder, self).__init__()
+
+        # Input conv
+        self.input_conv = nn.Conv2d(vocab_size, feature_dim * 8, kernel_size=1)
+
+        # Blocks
+        self.blocks = nn.Sequential(
+            OrderedDict([
+                ('group_1',
+                 nn.Sequential(
+                     OrderedDict([
+                         *[(f'block_{i+1}',
+                            ResBlock(8 * feature_dim, 8 * feature_dim))
+                           for i in range(num_blocks)],
+                         ('upsample',
+                          nn.Upsample(scale_factor=2, mode="nearest"))
+                     ]))),
+                ('group_2',
+                 nn.Sequential(
+                     OrderedDict([
+                         *[(f'block_{i+1}',
+                            ResBlock(
+                                8 * feature_dim if i == 0 else 4 * feature_dim,
+                                4 * feature_dim)) for i in range(num_blocks)],
+                         ('upsample',
+                          nn.Upsample(scale_factor=2, mode="nearest"))
+                     ]))),
+                ('group_3',
+                 nn.Sequential(
+                     OrderedDict([
+                         *[(f'block_{i+1}',
+                            ResBlock(
+                                4 * feature_dim if i == 0 else 2 * feature_dim,
+                                2 * feature_dim)) for i in range(num_blocks)],
+                         ('upsample',
+                          nn.Upsample(scale_factor=2, mode="nearest"))
+                     ]))),
+                ('group_4',
+                 nn.Sequential(
+                     OrderedDict([
+                         *[(f'block_{i+1}',
+                            ResBlock(
+                                2 * feature_dim if i == 0 else 1 * feature_dim,
+                                1 * feature_dim)) for i in range(num_blocks)],
+                         ('upsample',
+                          nn.Upsample(scale_factor=2, mode="nearest"))
+                     ])))
+            ]))
+
+        # Output conv
+        self.output_conv = nn.Conv2d(1 * feature_dim, channels, kernel_size=1)
+
+        # Activations
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        x = rearrange(x, 'b h w v -> b v h w')
+
+        x = self.input_conv(x)
+        x = self.relu(x)
+        print(x.shape)
+
+        x = self.blocks(x)
+
+        x = self.output_conv(x)
         return x
