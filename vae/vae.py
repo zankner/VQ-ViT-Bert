@@ -169,8 +169,6 @@ class Decoder(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        x = rearrange(x, 'b h w v -> b v h w')
-
         x = self.input_conv(x)
         x = self.relu(x)
 
@@ -181,25 +179,25 @@ class Decoder(nn.Module):
 
 
 class VectorQuantizer(nn.Module):
-    def __init__(self, num_embeddings, vocab_size, commitment_cost=0.6):
+    def __init__(self, num_embeddings, embedding_dim, commitment_cost=0.6):
         super(VectorQuantizer, self).__init__()
 
-        self._vocab_size = vocab_size
+        self._embedding_dim = embedding_dim
         self._num_embeddings = num_embeddings
 
-        self._embedding = nn.Embedding(self._num_embeddings, self._vocab_size)
+        self._embedding = nn.Embedding(self._num_embeddings,
+                                       self._embedding_dim)
         self._embedding.weight.data.uniform_(-1 / self._num_embeddings,
                                              1 / self._num_embeddings)
         self._commitment_cost = commitment_cost
 
     def forward(self, inputs):
         # convert inputs from BCHW -> BHWC
-        # inputs = inputs.permute(0, 2, 3, 1).contiguous()
         inputs = rearrange(inputs, 'b c h w -> b h w c')
         input_shape = inputs.shape
 
         # Flatten input
-        flat_input = inputs.contiguous().view(-1, self._vocab_size)
+        flat_input = inputs.contiguous().view(-1, self._embedding_dim)
 
         # Calculate distances
         distances = (torch.sum(flat_input**2, dim=1, keepdim=True) +
@@ -226,7 +224,38 @@ class VectorQuantizer(nn.Module):
         avg_probs = torch.mean(encodings, dim=0)
         perplexity = torch.exp(-torch.sum(avg_probs *
                                           torch.log(avg_probs + 1e-10)))
+        # convert encoding indices from (BHW)C -> B(HWC)
+        encoding_indices = rearrange(encoding_indices,
+                                     "(b h w) c -> b (h w c)",
+                                     h=input_shape[1],
+                                     w=input_shape[2])
 
         # convert quantized from BHWC -> BCHW
-        return loss, quantized.permute(0, 3, 1,
-                                       2).contiguous(), perplexity, encodings
+        quantized = rearrange(quantized, "b h w c -> b c h w")
+        return loss, quantized.contiguous(), perplexity, encoding_indices
+
+
+class VQVae(nn.Module):
+    def __init__(self,
+                 vocab_size,
+                 num_embeddings,
+                 num_blocks=2,
+                 feature_dim=64,
+                 channels=3,
+                 commitment_cost=0.6):
+        super(VQVae, self).__init__()
+
+        # Encoder and decoder
+        self.encoder = Encoder(vocab_size, num_blocks, feature_dim, channels)
+        self.decoder = Decoder(vocab_size, num_blocks, feature_dim, channels)
+
+        # Vector quantizer
+        self.vector_quantizer = VectorQuantizer(num_embeddings, vocab_size,
+                                                commitment_cost)
+
+    def forward(self, x):
+        x = self.encoder(x)
+        vq_loss, vq_z, _, _ = self.vector_quantizer(x)
+        out = self.decoder(vq_z)
+
+        return out, vq_loss
