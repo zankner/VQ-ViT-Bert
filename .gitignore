@@ -217,4 +217,7 @@ tags
 .history
 .ionide
 
+### User Ignores ###
+runs/
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,python,visualstudiocode,vim

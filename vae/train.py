@@ -4,6 +4,7 @@ import torch.nn as nn
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torchvision import transforms, datasets
+from torch.utils.tensorboard import SummaryWriter
 import datetime
 from vae import VQVae
 from vae.model_utils import train_step, validate_step
@@ -40,6 +41,9 @@ def train(args):
                                               batch_size=args.batch_size)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    summary_path = os.path.join("runs", log_time)
+    os.mkdir(summary_path)
+    writer = SummaryWriter(summary_path)
 
     model = VQVae(args.vocab_size, args.num_embeddings, args.num_blocks,
                   args.feature_dim, args.channels, args.commitment_cost)
@@ -56,7 +60,7 @@ def train(args):
     start_epoch = 1
     for epoch in range(start_epoch, args.epochs + 1):
         train_step(train_loader, model, criterion, optimizer, epoch, device,
-                   args)
+                   writer, args)
         scheduler.step()
 
         validate_step(test_loader, model, criterion, device, args)

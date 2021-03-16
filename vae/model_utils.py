@@ -3,7 +3,8 @@ import time
 from utils import AverageMeter, ProgressMeter
 
 
-def train_step(train_loader, model, criterion, optimizer, epoch, device, args):
+def train_step(train_loader, model, criterion, optimizer, epoch, device,
+               writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -41,6 +42,8 @@ def train_step(train_loader, model, criterion, optimizer, epoch, device, args):
         end = time.time()
         if (i + 1) % args.print_freq == 0:
             progress.display(i + 1)
+            writer.add_scalar('training_loss', losses.avg,
+                              epoch * len(train_loader) + i)
 
 
 def validate_step(val_loader, model, criterion, device, args):
