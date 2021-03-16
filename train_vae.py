@@ -1,64 +1,29 @@
-import os
-import torch
-import torch.nn as nn
-from torch import optim
-from torch.optim.lr_scheduler import StepLR
-from torchvision import transforms, datasets
-import datetime
-from vae import VQVae
-from vae.model_utils import train_step, validate_step
+import argparse
+from vae import train
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Train VQ-VAE')
 
-def train(args):
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
+    parser.add_argument("--data_dir",
+                        default="./data",
+                        help="location dataset is stored",
+                        type=str)
+    parser.add_argument("--batch_size", default=64, type=int)
+    parser.add_argument("--weight_decay", default=0.0, type=float)
+    parser.add_argument("--step_size", default=30, type=int)
+    parser.add_argument("--epochs", default=100, type=int)
+    parser.add_argument("--print_freq", default=50, type=int)
+    parser.add_argument("--seed", default=None, type=int)
+    parser.add_argument("--model_name", default="resnet18", type=str)
+    parser.add_argument("--num_workers", default=3, type=int)
+    parser.add_argument("--hidden_size", default=512, type=int)
+    parser.add_argument("--vocab_size", default=256, type=int)
+    parser.add_argument("--num_embeddings", default=256, type=int)
+    parser.add_argument("--num_blocks", default=2, type=int)
+    parser.add_argument("--feature_dim", default=64, type=int)
+    parser.add_argument("--channels", default=3, type=int)
+    parser.add_argument("--commitment_cost", default=0.6, type=int)
 
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-    train_transforms = transforms.Compose([
-        transforms.RandomResizedCrop(32),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(), normalize
-    ])
-    test_transforms = transforms.Compose(
-        [transforms.CenterCrop(32),
-         transforms.ToTensor(), normalize])
+    args = parser.parse_args()
 
-    train_dataset = datasets.CIFAR10(args.data_dir,
-                                     train=True,
-                                     transform=train_transforms,
-                                     download=True)
-
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=args.batch_size)
-
-    test_dataset = datasets.CIFAR10(args.data_dir,
-                                    train=False,
-                                    transform=test_transforms,
-                                    download=True)
-
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=args.batch_size)
-
-    log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-    model = VQVae(args.vocab_size, args.num_embeddings, args.num_blocks,
-                  args.feature_dim, args.channels, args.commitment_cost)
-    model.eval()
-    model.to(device)
-
-    optimizer = optim.Adam(model.parameters(), weight_decay=args.weight_decay)
-
-    scheduler = StepLR(optimizer, step_size=args.step_size)
-
-    criterion = nn.CrossEntropyLoss()
-    criterion.to(device)
-
-    start_epoch = 1
-    for epoch in range(start_epoch, args.epochs + 1):
-        train_step(train_loader, model, criterion, optimizer, epoch, device,
-                   args)
-        scheduler.step()
-
-        validate_step(test_loader, model, criterion, device, args)
+    train(args)

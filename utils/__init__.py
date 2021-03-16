@@ -1,2 +1,2 @@
-from meters import AverageMeter, ProgressMeter
-from metrics import accuracy
+from utils.meters import AverageMeter, ProgressMeter
+from utils.metrics import accuracy

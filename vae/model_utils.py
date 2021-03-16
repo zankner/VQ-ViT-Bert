@@ -16,16 +16,15 @@ def train_step(train_loader, model, criterion, optimizer, epoch, device, args):
     model.train()
 
     end = time.time()
-    for i, (images, target) in enumerate(train_loader):
+    for i, (images, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
         images = images.to(device)
-        target = target.to(device)
 
         # compute output
-        output = model(images)
-        loss = criterion(output, target)
+        output, vq_loss = model(images)
+        loss = criterion(output, images) + vq_loss
 
         # measure perplexity and record loss
         losses.update(loss.item(), images.size(0))
@@ -60,8 +59,8 @@ def validate_step(val_loader, model, criterion, device, args):
             target = target.to(device)
 
             # compute output
-            output = model(images)
-            loss = criterion(output, target)
+            output, vq_loss = model(images)
+            loss = criterion(output, target) + vq_loss
 
             # measure perplexity and record loss
             losses.update(loss.item(), images.size(0))
