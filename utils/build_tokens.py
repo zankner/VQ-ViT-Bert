@@ -1,3 +1,4 @@
+import os
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
@@ -27,6 +28,19 @@ def build_tokens(args):
                       args.feature_dim, args.channels)
     model.to(device)
 
+    out_dir = os.path.join("data", "ViTBert-Tokens", "train")
+    if not os.path.isdir(out_dir):
+        os.makedirs(out_dir)
+
+    example_counter = 0
     for (images, _) in tqdm(train_loader):
         encodings = model.get_encodings(images)
-        print(encodings)
+
+        file_names = [
+            os.path.join(out_dir, f"train_{i}.pt")
+            for i in range(example_counter, example_counter + len(images))
+        ]
+        for file_name, encoding in zip(file_names, encodings):
+            torch.save(encoding, file_name)
+
+        example_counter += len(images)
