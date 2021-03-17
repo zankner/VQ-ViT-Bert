@@ -34,13 +34,20 @@ def build_tokens(args):
 
     example_counter = 0
     for (images, _) in tqdm(train_loader):
+        # Retrive  quanitzed targets from encoder
         encodings = model.get_encodings(images)
 
+        # Append cls token to start of encodings
+        encodings += 1
+        cls_tokens = torch.zeros(len(images), 1)
+        cls_encodings = torch.cat([cls_tokens, encodings], dim=1)
+
+        # Save tokens to file
         file_names = [
             os.path.join(out_dir, f"train_{i}.pt")
             for i in range(example_counter, example_counter + len(images))
         ]
-        for file_name, encoding in zip(file_names, encodings):
+        for file_name, encoding in zip(file_names, cls_encodings):
             torch.save(encoding, file_name)
 
         example_counter += len(images)
