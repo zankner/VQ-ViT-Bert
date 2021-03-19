@@ -29,6 +29,9 @@ def pretrain(args):
     os.mkdir(summary_path)
     writer = SummaryWriter(summary_path)
 
+    checkpoint_dir = os.path.join(args.checkpoint_dir, log_time)
+    os.mkdir(checkpoint_dir)
+
     transformer = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.embedding_dim, args.dim_head,
                       args.dropout, args.emb_dropout)
@@ -50,4 +53,13 @@ def pretrain(args):
         train_step(train_loader, mpp, optimizer, epoch, device, writer, args)
         scheduler.step()
 
-        validate_step(test_loader, mpp, device, epoch, writer, args)
+        val_loss = validate_step(test_loader, mpp, device, epoch, writer, args)
+
+        # Checkpoint model
+        torch.save(
+            {
+                'epoch': epoch,
+                'model_state_dict': mpp.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': val_loss,
+            }, os.path.join(checkpoint_dir, "checkpoint.pt"))

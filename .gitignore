@@ -218,8 +218,13 @@ tags
 .ionide
 
 ### User Ignores ###
-runs/
+vae_runs/
+vae_ckpt/
 
 data/
+
+vit_pretrain_ckpt/
+
+vit_runs/
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,python,visualstudiocode,vim

@@ -41,9 +41,12 @@ def train(args):
                                               batch_size=args.batch_size)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    summary_path = os.path.join("runs", log_time)
+    summary_path = os.path.join(args.summary_dir, log_time)
     os.mkdir(summary_path)
     writer = SummaryWriter(summary_path)
+
+    checkpoint_dir = os.path.join(args.checkpoint_dir, log_time)
+    os.mkdir(checkpoint_dir)
 
     model = VQVae(args.vocab_size, args.num_embeddings, args.num_blocks,
                   args.feature_dim, args.channels, args.commitment_cost)
@@ -63,4 +66,13 @@ def train(args):
                    writer, args)
         scheduler.step()
 
-        validate_step(test_loader, model, criterion, device, args)
+        val_loss = validate_step(test_loader, model, criterion, device, args)
+
+        # Checkpoint model
+        torch.save(
+            {
+                'epoch': epoch,
+                'model_state_dict': mpp.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': val_loss,
+            }, os.path.join(checkpoint_dir, "checkpoint.pt"))

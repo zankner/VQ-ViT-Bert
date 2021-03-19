@@ -8,6 +8,8 @@ if __name__ == "__main__":
                         default="./data",
                         help="location dataset is stored",
                         type=str)
+    parser.add_argument("--checkpoint_dir", default="./vae_ckpt", type=str)
+    parser.add_argument("--summary_dir", default="./vae_runs", type=str)
     parser.add_argument("--batch_size", default=64, type=int)
     parser.add_argument("--weight_decay", default=0.0, type=float)
     parser.add_argument("--step_size", default=30, type=int)
