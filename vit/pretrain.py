@@ -8,10 +8,10 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from vit import ViT
 from vit import TokensDataset, MPP
-from vae.model_utils import train_step, validate_step
+from vit.model_utils import train_step, validate_step
 
 
-def train(args):
+def pretrain(args):
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda"
@@ -19,6 +19,10 @@ def train(args):
     train_dataset = TokensDataset(args.data_dir, args.extension)
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=args.batch_size)
+
+    test_dataset = TokensDataset(args.data_dir, args.extension)
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=args.batch_size)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     summary_path = os.path.join("vit_runs", log_time)
@@ -45,3 +49,5 @@ def train(args):
     for epoch in range(start_epoch, args.epochs + 1):
         train_step(train_loader, mpp, optimizer, epoch, device, writer, args)
         scheduler.step()
+
+        validate_step(test_loader, mpp, device, epoch, writer, args)
