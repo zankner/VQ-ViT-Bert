@@ -6,12 +6,11 @@ from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
-from vit import ViT
-from vit import TokensDataset, MPP
-from vit.model_utils import train_step, validate_step
+from vit import ViT, LinearClassifier, TokensDataset, MPP
+from vit.model_utils import fine_tune_train_step, fine_tune_validate_step
 
 
-def pretrain(args):
+def fine_tune(args):
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda"
@@ -35,13 +34,12 @@ def pretrain(args):
     transformer = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.embedding_dim, args.dim_head,
                       args.dropout, args.emb_dropout)
-    mpp = MPP(transformer, args.mask_prob, args.replace_prob, args.num_tokens,
-              args.random_token_prob, args.mask_token_id, args.pad_token_id,
-              args.mask_ignore_token_ids)
-    mpp.eval()
-    mpp.to(device)
+    classifier = LinearClassifier(transformer, args.dim, args.out_dim)
+    classifier.eval()
+    classifier.to(device)
 
-    optimizer = optim.Adam(mpp.parameters(), weight_decay=args.weight_decay)
+    optimizer = optim.Adam(classifier.parameters(),
+                           weight_decay=args.weight_decay)
 
     scheduler = StepLR(optimizer, step_size=args.step_size)
 
@@ -50,16 +48,18 @@ def pretrain(args):
 
     start_epoch = 1
     for epoch in range(start_epoch, args.epochs + 1):
-        train_step(train_loader, mpp, optimizer, epoch, device, writer, args)
+        fine_tune_train_step(train_loader, classifier, criterion, optimizer,
+                             epoch, device, writer, args)
         scheduler.step()
 
-        val_loss = validate_step(test_loader, mpp, device, epoch, writer, args)
+        val_loss = fine_tune_validate_step(test_loader, classifier, criterion,
+                                           device, epoch, writer, args)
 
         # Checkpoint model
         torch.save(
             {
                 'epoch': epoch,
-                'model_state_dict': mpp.state_dict(),
+                'model_state_dict': classifier.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': val_loss,
             }, os.path.join(checkpoint_dir, "checkpoint.pt"))
