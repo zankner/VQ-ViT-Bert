@@ -75,9 +75,9 @@ def validate_step(val_loader, model, device, epoch, writer, args):
                                   epoch * len(val_loader) + i)
 
         # TODO: this should also be done with the ProgressMeter
-        print(' * Loss {loss.avg:.3f}'.format(loss=loss))
+        print(' * Loss {losses.avg:.3f}'.format(losses=losses))
 
-        return loss.avg
+        return losses.avg
 
 
 def fine_tune_train_step(train_loader, model, criterion, optimizer, epoch,

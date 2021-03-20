@@ -227,4 +227,8 @@ vit_pretrain_ckpt/
 
 vit_runs/
 
+linear_head_ckpt/
+
+linear_head_runs/
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,python,visualstudiocode,vim

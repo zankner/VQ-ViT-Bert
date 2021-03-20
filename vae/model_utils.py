@@ -76,6 +76,6 @@ def validate_step(val_loader, model, criterion, device, args):
                 progress.display(i)
 
         # TODO: this should also be done with the ProgressMeter
-        print(' * Loss {loss.avg:.3f}'.format(loss=loss))
+        print(' * Loss {losses.avg:.3f}'.format(losses=losses))
 
-    return loss.avg
+    return losses.avg

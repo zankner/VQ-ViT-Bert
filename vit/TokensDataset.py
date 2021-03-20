@@ -16,9 +16,11 @@ class TokensDataset(torch.utils.data.Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        tokens_path = os.path.join(self.root_dir, self.samples[idx])
-        tokens = torch.load(tokens_path)
-        return tokens
+        data_path = os.path.join(self.root_dir, self.samples[idx])
+        datum = torch.load(data_path)
+        tokens = datum["tokens"]
+        label = datum["label"]
+        return tokens, label
 
     def _get_files(self):
         files = os.listdir(self.root_dir)

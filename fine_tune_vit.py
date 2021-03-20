@@ -8,10 +8,16 @@ if __name__ == "__main__":
                         default="./data/ViTBert-Tokens/train",
                         help="location dataset is stored",
                         type=str)
-    parser.add_argument("--checkpoint_dir",
+    parser.add_argument("--transformer_ckpt",
                         default="./vit_pretrain_ckpt",
                         type=str)
-    parser.add_argument("--summary_dir", default="./vit_runs", type=str)
+    parser.add_argument("--transformer_dir", required=True, type=str)
+    parser.add_argument("--checkpoint_dir",
+                        default="./linear_head_ckpt",
+                        type=str)
+    parser.add_argument("--summary_dir",
+                        default="./linear_head_runs",
+                        type=str)
     parser.add_argument("--batch_size", default=64, type=int)
     parser.add_argument("--weight_decay", default=0.0, type=float)
     parser.add_argument("--step_size", default=30, type=int)
@@ -43,6 +49,7 @@ if __name__ == "__main__":
     parser.add_argument("--mask_token_id", default=2, type=int)
     parser.add_argument("--pad_token_id", default=0, type=int)
     parser.add_argument("--mask_ignore_token_ids", default=[], nargs="*")
+    parser.add_argument("--out_dim", default=10, type=int)
 
     args = parser.parse_args()
 
