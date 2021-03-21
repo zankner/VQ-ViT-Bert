@@ -25,7 +25,7 @@ def pretrain(args):
                                               batch_size=args.batch_size)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    summary_path = os.path.join("vit_runs", log_time)
+    summary_path = os.path.join(args.summary_dir, log_time)
     os.mkdir(summary_path)
     writer = SummaryWriter(summary_path)
 

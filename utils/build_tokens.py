@@ -28,7 +28,7 @@ def build_tokens(args):
                       args.feature_dim, args.channels)
     model.to(device)
 
-    out_dir = os.path.join("data", "ViTBert-Tokens", "train")
+    out_dir = os.path.join(args.data_dir, "ViTBert-Tokens", "train")
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
 
