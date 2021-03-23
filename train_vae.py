@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", default="resnet18", type=str)
     parser.add_argument("--num_workers", default=3, type=int)
     parser.add_argument("--hidden_size", default=512, type=int)
-    parser.add_argument("--vocab_size", default=256, type=int)
+    parser.add_argument("--vocab_size", default=1024, type=int)
     parser.add_argument("--num_embeddings", default=256, type=int)
     parser.add_argument("--num_blocks", default=2, type=int)
     parser.add_argument("--feature_dim", default=64, type=int)
