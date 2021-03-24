@@ -9,6 +9,7 @@ if __name__ == "__main__":
                         default="./data",
                         help="location dataset is stored",
                         type=str)
+    parser.add_argument("--architecture", type=str)
     parser.add_argument("--batch_size", default=64, type=int)
     parser.add_argument("--model_name", default="resnet18", type=str)
     parser.add_argument("--num_workers", default=3, type=int)

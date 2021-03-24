@@ -261,7 +261,7 @@ class VQVae(nn.Module):
         return out, vq_loss
 
     @torch.no_grad()
-    def get_encodings(self, x):
+    def get_codebook_indices(self, x):
         x = self.encoder(x)
         _, _, _, encodings = self.vector_quantizer(x)
         return encodings

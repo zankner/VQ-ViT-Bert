@@ -3,7 +3,7 @@ import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from tqdm import tqdm
-from vae import vae
+from vae import VQVae, OpenAIDiscreteVAE
 
 
 def build_tokens(args):
@@ -24,8 +24,12 @@ def build_tokens(args):
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=args.batch_size)
 
-    model = vae.VQVae(args.vocab_size, args.num_embeddings, args.num_blocks,
+    if args.architecture == "dall-e":
+        model = OpenAIDiscreteVAE()
+    else:
+        model = VQVae(args.vocab_size, args.num_embeddings, args.num_blocks,
                       args.feature_dim, args.channels)
+
     model.to(device)
 
     out_dir = os.path.join(args.data_dir, "ViTBert-Tokens", "train")
@@ -34,12 +38,15 @@ def build_tokens(args):
 
     example_counter = 0
     for (images, labels) in tqdm(train_loader):
+        images = images.to(device)
+        labels = labels.to(device)
+
         # Retrive  quanitzed targets from encoder
-        encodings = model.get_encodings(images)
+        encodings = model.get_codebook_indices(images)
 
         # Append cls token to start of encodings
         encodings += 1
-        cls_tokens = torch.zeros(len(images), 1)
+        cls_tokens = torch.zeros(len(images), 1, device=device)
         cls_encodings = torch.cat([cls_tokens, encodings], dim=1).long()
 
         # Save tokens to file
