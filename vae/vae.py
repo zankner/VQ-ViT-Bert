@@ -44,7 +44,11 @@ class ResBlock(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, vocab_size, num_blocks=2, feature_dim=64, channels=3):
+    def __init__(self,
+                 embedding_dim,
+                 num_blocks=2,
+                 feature_dim=64,
+                 channels=3):
         super(Encoder, self).__init__()
 
         # Input conv
@@ -95,7 +99,7 @@ class Encoder(nn.Module):
 
         # Output conv
         self.output_conv = nn.Conv2d(8 * feature_dim,
-                                     vocab_size,
+                                     embedding_dim,
                                      kernel_size=1)
 
         # Activations
@@ -112,11 +116,17 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, vocab_size, num_blocks=2, feature_dim=64, channels=3):
+    def __init__(self,
+                 embedding_dim,
+                 num_blocks=2,
+                 feature_dim=64,
+                 channels=3):
         super(Decoder, self).__init__()
 
         # Input conv
-        self.input_conv = nn.Conv2d(vocab_size, feature_dim * 8, kernel_size=1)
+        self.input_conv = nn.Conv2d(embedding_dim,
+                                    feature_dim * 8,
+                                    kernel_size=1)
 
         # Blocks
         self.blocks = nn.Sequential(
@@ -179,16 +189,15 @@ class Decoder(nn.Module):
 
 
 class VectorQuantizer(nn.Module):
-    def __init__(self, num_embeddings, embedding_dim, commitment_cost=0.6):
+    def __init__(self, vocab_size, embedding_dim, commitment_cost=0.6):
         super(VectorQuantizer, self).__init__()
 
         self._embedding_dim = embedding_dim
-        self._num_embeddings = num_embeddings
+        self._vocab_size = vocab_size
 
-        self._embedding = nn.Embedding(self._num_embeddings,
-                                       self._embedding_dim)
-        self._embedding.weight.data.uniform_(-1 / self._num_embeddings,
-                                             1 / self._num_embeddings)
+        self._embedding = nn.Embedding(self._vocab_size, self._embedding_dim)
+        self._embedding.weight.data.uniform_(-1 / self._vocab_size,
+                                             1 / self._vocab_size)
         self._commitment_cost = commitment_cost
 
     def forward(self, inputs):
@@ -207,7 +216,7 @@ class VectorQuantizer(nn.Module):
         # Encoding
         encoding_indices = torch.argmin(distances, dim=1).unsqueeze(1)
         encodings = torch.zeros(encoding_indices.shape[0],
-                                self._num_embeddings,
+                                self._vocab_size,
                                 device=inputs.device)
         encodings.scatter_(1, encoding_indices, 1)
 
@@ -238,7 +247,7 @@ class VectorQuantizer(nn.Module):
 class VQVae(nn.Module):
     def __init__(self,
                  vocab_size,
-                 num_embeddings,
+                 embedding_dim,
                  num_blocks=2,
                  feature_dim=64,
                  channels=3,
@@ -246,11 +255,13 @@ class VQVae(nn.Module):
         super(VQVae, self).__init__()
 
         # Encoder and decoder
-        self.encoder = Encoder(vocab_size, num_blocks, feature_dim, channels)
-        self.decoder = Decoder(vocab_size, num_blocks, feature_dim, channels)
+        self.encoder = Encoder(embedding_dim, num_blocks, feature_dim,
+                               channels)
+        self.decoder = Decoder(embedding_dim, num_blocks, feature_dim,
+                               channels)
 
         # Vector quantizer
-        self.vector_quantizer = VectorQuantizer(num_embeddings, vocab_size,
+        self.vector_quantizer = VectorQuantizer(vocab_size, embedding_dim,
                                                 commitment_cost)
 
     def forward(self, x):
