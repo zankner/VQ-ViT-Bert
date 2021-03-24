@@ -7,8 +7,9 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from vit import ViT
-from vit import TokensDataset, MPP
+from vit import MPP
 from vit.model_utils import train_step, validate_step
+from tokens_utils import TokensDataset
 
 
 def pretrain(args):
@@ -35,7 +36,7 @@ def pretrain(args):
     transformer = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.dim_head, args.dropout,
                       args.emb_dropout)
-    mpp = MPP(transformer, args.num_tokens, args.dim, args.mask_prob,
+    mpp = MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
               args.replace_prob, args.random_token_prob, args.mask_token_id,
               args.pad_token_id, args.mask_ignore_token_ids)
     mpp.eval()

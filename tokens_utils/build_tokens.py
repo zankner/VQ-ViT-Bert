@@ -34,7 +34,7 @@ def build_tokens(args):
     if args.architecture == "dall-e":
         model = OpenAIDiscreteVAE()
     else:
-        model = VQVae(args.vocab_size, args.num_embeddings, args.num_blocks,
+        model = VQVae(args.vocab_size, args.embedding_dim, args.num_blocks,
                       args.feature_dim, args.channels)
 
     model.to(device)

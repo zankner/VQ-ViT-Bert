@@ -41,7 +41,7 @@ def get_mask_subset_with_prob(mask, prob):
 class MPP(nn.Module):
     def __init__(self,
                  transformer,
-                 num_tokens,
+                 vocab_size,
                  transformer_dim,
                  mask_prob=0.15,
                  replace_prob=0.9,
@@ -54,14 +54,14 @@ class MPP(nn.Module):
         self.transformer = transformer
 
         # define linear head
-        self.linear = nn.Linear(transformer_dim, num_tokens)
+        self.linear = nn.Linear(transformer_dim, vocab_size)
 
         # mlm related probabilities
         self.mask_prob = mask_prob
         self.replace_prob = replace_prob
         self.random_token_prob = random_token_prob
 
-        self.num_tokens = num_tokens
+        self.vocab_size = vocab_size
 
         # token ids
         self.pad_token_id = pad_token_id
@@ -83,10 +83,10 @@ class MPP(nn.Module):
 
         # if random token probability > 0 for mlm
         if self.random_token_prob > 0:
-            assert self.num_tokens is not None, 'num_tokens keyword must be supplied when instantiating MLM if using random token replacement'
+            assert self.vocab_size is not None, 'vocab_size keyword must be supplied when instantiating MLM if using random token replacement'
             random_token_prob = prob_mask_like(input, self.random_token_prob)
             random_tokens = torch.randint(0,
-                                          self.num_tokens,
+                                          self.vocab_size,
                                           input.shape,
                                           device=input.device)
             random_no_mask = mask_with_tokens(random_tokens,

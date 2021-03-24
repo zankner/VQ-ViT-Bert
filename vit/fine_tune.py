@@ -6,8 +6,9 @@ from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
-from vit import ViT, LinearClassifier, MPP, TokensDataset
+from vit import ViT, LinearClassifier, MPP
 from vit.model_utils import fine_tune_train_step, fine_tune_validate_step
+from tokens_utils import TokensDataset
 
 
 def fine_tune(args):
