@@ -33,11 +33,11 @@ def pretrain(args):
     os.mkdir(checkpoint_dir)
 
     transformer = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
-                      args.vocab_size, args.embedding_dim, args.dim_head,
-                      args.dropout, args.emb_dropout)
-    mpp = MPP(transformer, args.mask_prob, args.replace_prob, args.num_tokens,
-              args.random_token_prob, args.mask_token_id, args.pad_token_id,
-              args.mask_ignore_token_ids)
+                      args.vocab_size, args.dim_head, args.dropout,
+                      args.emb_dropout)
+    mpp = MPP(transformer, args.num_tokens, args.dim, args.mask_prob,
+              args.replace_prob, args.random_token_prob, args.mask_token_id,
+              args.pad_token_id, args.mask_ignore_token_ids)
     mpp.eval()
     mpp.to(device)
 

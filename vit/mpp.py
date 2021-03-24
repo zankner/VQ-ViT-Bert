@@ -41,9 +41,10 @@ def get_mask_subset_with_prob(mask, prob):
 class MPP(nn.Module):
     def __init__(self,
                  transformer,
+                 num_tokens,
+                 transformer_dim,
                  mask_prob=0.15,
                  replace_prob=0.9,
-                 num_tokens=None,
                  random_token_prob=0.,
                  mask_token_id=2,
                  pad_token_id=0,
@@ -51,6 +52,9 @@ class MPP(nn.Module):
         super().__init__()
 
         self.transformer = transformer
+
+        # define linear head
+        self.linear = nn.Linear(transformer_dim, num_tokens)
 
         # mlm related probabilities
         self.mask_prob = mask_prob
@@ -100,7 +104,8 @@ class MPP(nn.Module):
         labels = input.masked_fill(~mask, self.pad_token_id)
 
         # get generator output and get mlm loss
-        logits = self.transformer(masked_input, **kwargs)
+        transformer_out = self.transformer(masked_input, **kwargs)
+        logits = self.linear(transformer_out)
 
         mlm_loss = F.cross_entropy(logits.transpose(1, 2),
                                    labels,

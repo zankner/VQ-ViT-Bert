@@ -4,7 +4,8 @@ import os
 
 class TokensDataset(torch.utils.data.Dataset):
     """VQ-VAE tokens dataset"""
-    def __init__(self, root_dir, extension="pt"):
+    def __init__(self, root_dir, train=True, extension="pt"):
+        data_dir = os.path.join(root_dir, "train" if train else "test")
         if not os.path.isdir(root_dir):
             raise ValueError("Root dir specified does not exist")
 

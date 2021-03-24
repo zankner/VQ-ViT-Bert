@@ -38,7 +38,6 @@ if __name__ == "__main__":
     parser.add_argument("--depth", default=8, type=int)
     parser.add_argument("--heads", default=8, type=int)
     parser.add_argument("--mlp_dim", default=2048, type=int)
-    parser.add_argument("--embedding_dim", default=512, type=int)
     parser.add_argument("--dim_head", default=64, type=int)
     parser.add_argument("--dropout", default=0.0, type=float)
     parser.add_argument("--emb_dropout", default=0.0, type=float)

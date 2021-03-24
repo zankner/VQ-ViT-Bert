@@ -32,10 +32,10 @@ def fine_tune(args):
     os.mkdir(checkpoint_dir)
 
     transformer_temp = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
-                           args.vocab_size, args.embedding_dim, args.dim_head,
-                           args.dropout, args.emb_dropout)
-    mpp = MPP(transformer_temp, args.mask_prob, args.replace_prob,
-              args.num_tokens, args.random_token_prob, args.mask_token_id,
+                           args.vocab_size, args.dim_head, args.dropout,
+                           args.emb_dropout)
+    mpp = MPP(transformer_temp, args.num_tokens, args.dim, args.mask_prob,
+              args.replace_prob, args.random_token_prob, args.mask_token_id,
               args.pad_token_id, args.mask_ignore_token_ids)
     saved_path = os.path.join(args.transformer_ckpt, args.transformer_dir,
                               "checkpoint.pt")
