@@ -5,8 +5,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train VQ-VAE')
 
     parser.add_argument("--data_dir",
-                        default="./data/ViTBert-Tokens/train",
-                        help="location dataset is stored",
+                        default="./data/ViTBert-Tokens",
+                        help="location tokens dataset is stored",
                         type=str)
     parser.add_argument("--checkpoint_dir",
                         default="./vit_pretrain_ckpt",

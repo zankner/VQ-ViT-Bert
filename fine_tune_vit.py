@@ -5,7 +5,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train VQ-VAE')
 
     parser.add_argument("--data_dir",
-                        default="./data/ViTBert-Tokens/train",
+                        default="./data/ViTBert-Tokens",
                         help="location dataset is stored",
                         type=str)
     parser.add_argument("--transformer_ckpt",
@@ -42,6 +42,9 @@ if __name__ == "__main__":
     parser.add_argument("--pad_token_id", default=0, type=int)
     parser.add_argument("--mask_ignore_token_ids", default=[], nargs="*")
     parser.add_argument("--out_dim", default=10, type=int)
+    parser.add_argument("--freeze_transformer",
+                        default=True,
+                        type=lambda x: (str(x).lower() != 'false'))
 
     args = parser.parse_args()
 

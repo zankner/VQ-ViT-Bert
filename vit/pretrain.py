@@ -21,7 +21,9 @@ def pretrain(args):
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                batch_size=args.batch_size)
 
-    test_dataset = TokensDataset(args.data_dir, args.extension)
+    test_dataset = TokensDataset(args.data_dir,
+                                 train=False,
+                                 extension=args.extension)
     test_loader = torch.utils.data.DataLoader(test_dataset,
                                               batch_size=args.batch_size)
 
