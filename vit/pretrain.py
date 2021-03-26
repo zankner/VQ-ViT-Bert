@@ -9,7 +9,8 @@ from torchvision import datasets
 from vit import ViT
 from vit import MPP
 from vit.model_utils import train_step, validate_step
-from tokens_utils import TokensDataset
+from vae import VQVae, OpenAIDiscreteVAE
+from utils import get_train_val_loaders
 
 
 def pretrain(args):
@@ -17,15 +18,7 @@ def pretrain(args):
     if torch.cuda.is_available():
         device = "cuda"
 
-    train_dataset = TokensDataset(args.data_dir, args.extension)
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=args.batch_size)
-
-    test_dataset = TokensDataset(args.data_dir,
-                                 train=False,
-                                 extension=args.extension)
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=args.batch_size)
+    train_loader, val_loader = get_train_val_loaders(args)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     summary_path = os.path.join(args.summary_dir, log_time)
@@ -35,12 +28,23 @@ def pretrain(args):
     checkpoint_dir = os.path.join(args.checkpoint_dir, log_time)
     os.mkdir(checkpoint_dir)
 
-    transformer = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
+    if args.architecture == "dall-e":
+        vae = OpenAIDiscreteVAE()
+    else:
+        assert args.vae_ckpt != None, "Vae checkpoint must be specified when loading a custom trained VAE"
+
+        vae = VQVae(args.vocab_size, args.embedding_dim, args.num_blocks,
+                    args.feature_dim, args.channels)
+        ckpt_dir = os.path.join(args.vae_ckpt, "checkpoint.pt")
+        vae_ckpt = torch.load(ckpt_dir)['model_state_dict']
+        vae.load_state_dict(vae_ckpt)
+
+    transformer = ViT(vae, args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.dim_head, args.dropout,
                       args.emb_dropout)
     mpp = MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
               args.replace_prob, args.random_token_prob, args.mask_token_id,
-              args.pad_token_id, args.mask_ignore_token_ids)
+              args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)
     mpp.eval()
     mpp.to(device)
 
@@ -56,7 +60,7 @@ def pretrain(args):
         train_step(train_loader, mpp, optimizer, epoch, device, writer, args)
         scheduler.step()
 
-        val_loss = validate_step(test_loader, mpp, device, epoch, writer, args)
+        val_loss = validate_step(val_loader, mpp, device, epoch, writer, args)
 
         # Checkpoint model
         torch.save(

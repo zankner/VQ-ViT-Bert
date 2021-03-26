@@ -63,7 +63,7 @@ def validate_step(val_loader, model, criterion, device, args):
 
             # compute output
             output, vq_loss = model(images)
-            loss = criterion(output, target) + vq_loss
+            loss = criterion(output, images) + vq_loss
 
             # measure perplexity and record loss
             losses.update(loss.item(), images.size(0))

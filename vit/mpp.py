@@ -46,6 +46,7 @@ class MPP(nn.Module):
                  mask_prob=0.15,
                  replace_prob=0.9,
                  random_token_prob=0.,
+                 cls_token_id=1,
                  mask_token_id=2,
                  pad_token_id=0,
                  mask_ignore_token_ids=[]):
@@ -66,10 +67,20 @@ class MPP(nn.Module):
         # token ids
         self.pad_token_id = pad_token_id
         self.mask_token_id = mask_token_id
+        self.cls_token_id = cls_token_id
         self.mask_ignore_token_ids = set(
             [*mask_ignore_token_ids, pad_token_id])
 
     def forward(self, input, **kwargs):
+        device = input.device
+
+        # convert raw image to tokens
+        codebook_indeces = self.transformer.vae.get_codebook_indices(input)
+        cls_tokens = torch.full((len(input), 1),
+                                self.cls_token_id,
+                                device=device)
+        input = torch.cat([cls_tokens, codebook_indeces], dim=1).long()
+
         # do not mask [pad] tokens, or any other tokens in the tokens designated to be excluded ([cls], [sep])
         # also do not include these special tokens in the tokens chosen at random
         no_mask = mask_with_tokens(input, self.mask_ignore_token_ids)

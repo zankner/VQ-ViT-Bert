@@ -95,6 +95,7 @@ class Transformer(nn.Module):
 
 class ViT(nn.Module):
     def __init__(self,
+                 vae,
                  dim,
                  depth,
                  heads,
@@ -102,8 +103,12 @@ class ViT(nn.Module):
                  vocab_size,
                  dim_head=64,
                  dropout=0.0,
-                 emb_dropout=0.0):
+                 emb_dropout=0.0,
+                 cls_token_id=1):
         super(ViT, self).__init__()
+
+        self.vae = vae
+        self.vae.requires_grad = False
 
         self.embedding = nn.Embedding(vocab_size, dim)
         self.pos_embedding = nn.Parameter(torch.randn(1, 1, dim))
@@ -112,7 +117,14 @@ class ViT(nn.Module):
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim,
                                        dropout)
 
-    def forward(self, x):
+        self.cls_token_id = cls_token_id
+
+    def forward(self, x, compute_codebook=False):
+        if compute_codebook:
+            codebook_indeces = self.vae.get_codebook_indices(x)
+            cls_tokens = torch.full((len(x), 1), self.cls_token_id)
+            x = torch.cat([cls_tokens, codebook_indeces], dim=1).long()
+
         b, n = x.shape
 
         x = self.embedding(x)

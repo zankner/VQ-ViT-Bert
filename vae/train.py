@@ -9,6 +9,7 @@ from torchvision import transforms, datasets
 import datetime
 from vae import VQVae
 from vae.model_utils import train_step, validate_step
+from utils import get_train_val_loaders, get_test_loader
 
 
 def train(args):
@@ -16,34 +17,7 @@ def train(args):
     if torch.cuda.is_available():
         device = "cuda"
 
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-    train_transforms = transforms.Compose([
-        transforms.RandomResizedCrop(32),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(), normalize
-    ])
-    test_transforms = transforms.Compose(
-        [transforms.CenterCrop(32),
-         transforms.ToTensor(), normalize])
-
-    dataset = datasets.CIFAR10(args.data_dir,
-                               train=True,
-                               transform=train_transforms,
-                               download=True)
-    train_len = int(0.8 * len(dataset))
-    train_dataset, val_dataset = random_split(
-        dataset, [train_len, len(dataset) - train_len])
-
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=args.batch_size)
-
-    val_dataset = datasets.CIFAR10(args.data_dir,
-                                   train=False,
-                                   transform=test_transforms,
-                                   download=True)
-    val_loader = torch.utils.data.DataLoader(val_dataset,
-                                             batch_size=args.batch_size)
+    train_loader, val_loader = get_train_val_loaders(args)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     summary_path = os.path.join(args.summary_dir, log_time)

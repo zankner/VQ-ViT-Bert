@@ -82,7 +82,7 @@ def build_tokens(args):
 
         # Append cls token to start of encodings
         encodings += 1
-        cls_tokens = torch.zeros(len(images), 1, device=device)
+        cls_tokens = torch.ones(len(images), 1, device=device)
         cls_encodings = torch.cat([cls_tokens, encodings], dim=1).long()
 
         # Save tokens to file
