@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", default=100, type=int)
     parser.add_argument("--print_freq", default=50, type=int)
     parser.add_argument("--seed", type=int)
-    parser.add_argument("--num_workers", default=3, type=int)
+    parser.add_argument("--num_workers", default=4, type=int)
 
     # Vae args
     parser.add_argument("--num_codebook_indeces", default=1000, type=int)

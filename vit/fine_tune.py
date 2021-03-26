@@ -51,7 +51,9 @@ def fine_tune(args):
         params = classifier.classification_head.parameters()
     else:
         params = classifier.parameters()
-    optimizer = optim.Adam(params, weight_decay=args.weight_decay)
+    optimizer = optim.Adam(params,
+                           lr=args.learning_rate,
+                           weight_decay=args.weight_decay)
 
     scheduler = StepLR(optimizer, step_size=args.step_size)
 
