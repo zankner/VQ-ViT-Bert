@@ -44,6 +44,7 @@ if __name__ == "__main__":
     parser.add_argument("--feature_dim", default=64, type=int)
     parser.add_argument("--channels", default=3, type=int)
     parser.add_argument("--commitment_cost", default=0.6, type=int)
+    parser.add_argument("--num_codebook_indeces", default=1024, type=int)
 
     args = parser.parse_args()
 

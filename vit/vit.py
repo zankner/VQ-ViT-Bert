@@ -101,29 +101,39 @@ class ViT(nn.Module):
                  heads,
                  mlp_dim,
                  vocab_size,
+                 num_codebook_indeces,
                  dim_head=64,
                  dropout=0.0,
                  emb_dropout=0.0,
-                 cls_token_id=1):
+                 cls_token_id=1,
+                 pad_token_id=0):
         super(ViT, self).__init__()
 
+        # VAE to get codebook indeces
         self.vae = vae
         self.vae.requires_grad = False
 
-        self.embedding = nn.Embedding(vocab_size, dim)
+        # Token and positional embedding
+        self.embedding = nn.Embedding(vocab_size,
+                                      dim,
+                                      padding_idx=pad_token_id)
         self.pos_embedding = nn.Parameter(torch.randn(1, 1, dim))
         self.dropout = nn.Dropout(emb_dropout)
 
+        # Transformer body of ViT
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim,
                                        dropout)
 
+        # Special tokens
         self.cls_token_id = cls_token_id
+        self.num_special_tokens = vocab_size - num_codebook_indeces
 
     def forward(self, x, compute_codebook=False):
         device = x.device
 
         if compute_codebook:
             codebook_indeces = self.vae.get_codebook_indices(x)
+            codebook_indeces += self.num_special_tokens
             cls_tokens = torch.full((len(x), 1),
                                     self.cls_token_id,
                                     device=device)

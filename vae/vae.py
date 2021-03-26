@@ -189,15 +189,18 @@ class Decoder(nn.Module):
 
 
 class VectorQuantizer(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, commitment_cost=0.6):
+    def __init__(self,
+                 num_codebook_indeces,
+                 embedding_dim,
+                 commitment_cost=0.6):
         super(VectorQuantizer, self).__init__()
 
         self._embedding_dim = embedding_dim
-        self._vocab_size = vocab_size
+        self._num_codebook_indeces = num_codebook_indeces
 
-        self._embedding = nn.Embedding(self._vocab_size, self._embedding_dim)
-        self._embedding.weight.data.uniform_(-1 / self._vocab_size,
-                                             1 / self._vocab_size)
+        self._embedding = nn.Embedding(self._num_codebook_indeces, self._embedding_dim)
+        self._embedding.weight.data.uniform_(-1 / self._num_codebook_indeces,
+                                             1 / self._num_codebook_indeces)
         self._commitment_cost = commitment_cost
 
     def forward(self, inputs):
@@ -216,7 +219,7 @@ class VectorQuantizer(nn.Module):
         # Encoding
         encoding_indices = torch.argmin(distances, dim=1).unsqueeze(1)
         encodings = torch.zeros(encoding_indices.shape[0],
-                                self._vocab_size,
+                                self._num_codebook_indeces,
                                 device=inputs.device)
         encodings.scatter_(1, encoding_indices, 1)
 
@@ -246,7 +249,7 @@ class VectorQuantizer(nn.Module):
 
 class VQVae(nn.Module):
     def __init__(self,
-                 vocab_size,
+                 num_codebook_indeces,
                  embedding_dim,
                  num_blocks=2,
                  feature_dim=64,
@@ -261,8 +264,8 @@ class VQVae(nn.Module):
                                channels)
 
         # Vector quantizer
-        self.vector_quantizer = VectorQuantizer(vocab_size, embedding_dim,
-                                                commitment_cost)
+        self.vector_quantizer = VectorQuantizer(num_codebook_indeces,
+                                                embedding_dim, commitment_cost)
 
     def forward(self, x):
         x = self.encoder(x)

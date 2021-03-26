@@ -33,15 +33,15 @@ def pretrain(args):
     else:
         assert args.vae_ckpt != None, "Vae checkpoint must be specified when loading a custom trained VAE"
 
-        vae = VQVae(args.vocab_size, args.embedding_dim, args.num_blocks,
-                    args.feature_dim, args.channels)
+        vae = VQVae(args.num_codebook_indeces, args.embedding_dim,
+                    args.num_blocks, args.feature_dim, args.channels)
         ckpt_dir = os.path.join(args.vae_ckpt, "checkpoint.pt")
         vae_ckpt = torch.load(ckpt_dir)['model_state_dict']
         vae.load_state_dict(vae_ckpt)
 
     transformer = ViT(vae, args.dim, args.depth, args.heads, args.mlp_dim,
-                      args.vocab_size, args.dim_head, args.dropout,
-                      args.emb_dropout)
+                      args.vocab_size, args.num_codebook_indeces,
+                      args.dim_head, args.dropout, args.emb_dropout)
     mpp = MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
               args.replace_prob, args.random_token_prob, args.mask_token_id,
               args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)

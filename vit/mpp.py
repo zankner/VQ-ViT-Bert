@@ -70,12 +70,14 @@ class MPP(nn.Module):
         self.cls_token_id = cls_token_id
         self.mask_ignore_token_ids = set(
             [*mask_ignore_token_ids, pad_token_id])
+        self.num_special_tokens = self.transformer.num_special_tokens
 
     def forward(self, input, **kwargs):
         device = input.device
 
         # convert raw image to tokens
         codebook_indeces = self.transformer.vae.get_codebook_indices(input)
+        codebook_indeces += self.num_special_tokens
         cls_tokens = torch.full((len(input), 1),
                                 self.cls_token_id,
                                 device=device)

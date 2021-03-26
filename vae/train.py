@@ -27,8 +27,9 @@ def train(args):
     checkpoint_dir = os.path.join(args.checkpoint_dir, log_time)
     os.mkdir(checkpoint_dir)
 
-    model = VQVae(args.vocab_size, args.embedding_dim, args.num_blocks,
-                  args.feature_dim, args.channels, args.commitment_cost)
+    model = VQVae(args.num_codebook_indeces, args.embedding_dim,
+                  args.num_blocks, args.feature_dim, args.channels,
+                  args.commitment_cost)
     model.eval()
     model.to(device)
 
