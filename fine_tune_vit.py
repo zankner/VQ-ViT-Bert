@@ -46,12 +46,14 @@ if __name__ == "__main__":
     parser.add_argument("--dim_head", default=64, type=int)
     parser.add_argument("--dropout", default=0.0, type=float)
     parser.add_argument("--emb_dropout", default=0.0, type=float)
+    parser.add_argument("--pad_token_id", default=0, type=int)
+    parser.add_argument("--cls_token_id", default=1, type=int)
+
+    # Mpp args
     parser.add_argument("--mask_prob", default=0.15, type=float)
     parser.add_argument("--replace_prob", default=0.9, type=float)
     parser.add_argument("--random_token_prob", default=0.0, type=float)
     parser.add_argument("--mask_token_id", default=2, type=int)
-    parser.add_argument("--pad_token_id", default=0, type=int)
-    parser.add_argument("--cls_token_id", default=1, type=int)
     parser.add_argument("--mask_ignore_token_ids", default=[], nargs="*")
 
     # Classifier args
