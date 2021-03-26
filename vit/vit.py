@@ -120,9 +120,13 @@ class ViT(nn.Module):
         self.cls_token_id = cls_token_id
 
     def forward(self, x, compute_codebook=False):
+        device = x.device
+
         if compute_codebook:
             codebook_indeces = self.vae.get_codebook_indices(x)
-            cls_tokens = torch.full((len(x), 1), self.cls_token_id)
+            cls_tokens = torch.full((len(x), 1),
+                                    self.cls_token_id,
+                                    device=device)
             x = torch.cat([cls_tokens, codebook_indeces], dim=1).long()
 
         b, n = x.shape

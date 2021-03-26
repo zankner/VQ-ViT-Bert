@@ -5,10 +5,10 @@ import torch.nn as nn
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import datasets
 from vit import ViT, LinearClassifier, MPP
 from vit.model_utils import fine_tune_train_step, fine_tune_validate_step
-from tokens_utils import TokensDataset
+from vae import VQVae, OpenAIDiscreteVAE
+from utils import get_train_val_loaders
 
 
 def fine_tune(args):
@@ -16,13 +16,7 @@ def fine_tune(args):
     if torch.cuda.is_available():
         device = "cuda"
 
-    train_dataset = TokensDataset(args.data_dir, args.extension)
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=args.batch_size)
-
-    test_dataset = TokensDataset(args.data_dir, args.extension)
-    test_loader = torch.utils.data.DataLoader(test_dataset,
-                                              batch_size=args.batch_size)
+    train_loader, val_loader = get_train_val_loaders(args)
 
     log_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     summary_path = os.path.join(args.summary_dir, log_time)
@@ -32,16 +26,22 @@ def fine_tune(args):
     checkpoint_dir = os.path.join(args.checkpoint_dir, log_time)
     os.mkdir(checkpoint_dir)
 
-    transformer = ViT(args.dim, args.depth, args.heads, args.mlp_dim,
+    if args.architecture == "dall-e":
+        vae = OpenAIDiscreteVAE()
+    else:
+        vae = VQVae(args.vocab_size, args.embedding_dim, args.num_blocks,
+                    args.feature_dim, args.channels)
+
+    transformer = ViT(vae, args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.dim_head, args.dropout,
                       args.emb_dropout)
     mpp = MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
               args.replace_prob, args.random_token_prob, args.mask_token_id,
-              args.pad_token_id, args.mask_ignore_token_ids)
-    saved_path = os.path.join(args.transformer_ckpt, args.transformer_dir,
-                              "checkpoint.pt")
-    mpp_saved = torch.load(saved_path)['model_state_dict']
-    mpp.load_state_dict(mpp_saved)
+              args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)
+
+    ckpt_dir = os.path.join(args.mpp_ckpt, "checkpoint.pt")
+    mpp_ckpt = torch.load(ckpt_dir)['model_state_dict']
+    mpp.load_state_dict(mpp_ckpt)
 
     classifier = LinearClassifier(mpp.transformer, args.dim, args.out_dim)
     classifier.eval()
@@ -64,7 +64,7 @@ def fine_tune(args):
                              epoch, device, writer, args)
         scheduler.step()
 
-        val_loss = fine_tune_validate_step(test_loader, classifier, criterion,
+        val_loss = fine_tune_validate_step(val_loader, classifier, criterion,
                                            device, epoch, writer, args)
 
         # Checkpoint model

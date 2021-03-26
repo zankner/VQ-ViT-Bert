@@ -8,10 +8,7 @@ if __name__ == "__main__":
                         default="./data/ViTBert-Tokens",
                         help="location dataset is stored",
                         type=str)
-    parser.add_argument("--transformer_ckpt",
-                        default="./vit_pretrain_ckpt",
-                        type=str)
-    parser.add_argument("--transformer_dir", required=True, type=str)
+    parser.add_argument("--mpp_ckpt", required=True, type=str)
     parser.add_argument("--checkpoint_dir",
                         default="./linear_head_ckpt",
                         type=str)
@@ -41,11 +38,18 @@ if __name__ == "__main__":
     parser.add_argument("--random_token_prob", default=0.0, type=float)
     parser.add_argument("--mask_token_id", default=2, type=int)
     parser.add_argument("--pad_token_id", default=0, type=int)
+    parser.add_argument("--cls_token_id", default=1, type=int)
     parser.add_argument("--mask_ignore_token_ids", default=[], nargs="*")
     parser.add_argument("--out_dim", default=10, type=int)
     parser.add_argument("--freeze_transformer",
                         default=True,
                         type=lambda x: (str(x).lower() != 'false'))
+    parser.add_argument("--architecture", type=str)
+    parser.add_argument("--embedding_dim", default=256, type=int)
+    parser.add_argument("--num_blocks", default=2, type=int)
+    parser.add_argument("--feature_dim", default=64, type=int)
+    parser.add_argument("--channels", default=3, type=int)
+    parser.add_argument("--commitment_cost", default=0.6, type=int)
 
     args = parser.parse_args()
 

@@ -17,17 +17,17 @@ def train_step(train_loader, model, optimizer, epoch, device, writer, args):
     model.train()
 
     end = time.time()
-    for i, (tokens, _) in enumerate(train_loader):
+    for i, (images, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        tokens = tokens.to(device)
+        images = images.to(device)
 
         # compute output
-        loss = model(tokens)
+        loss = model(images)
 
         # measure perplexity and record loss
-        losses.update(loss.item(), tokens.size(0))
+        losses.update(loss.item(), images.size(0))
 
         # compute gradient
         optimizer.zero_grad()
@@ -56,14 +56,14 @@ def validate_step(val_loader, model, device, epoch, writer, args):
 
     with torch.no_grad():
         end = time.time()
-        for i, (tokens, _) in enumerate(val_loader):
-            tokens = tokens.to(device)
+        for i, (images, _) in enumerate(val_loader):
+            images = images.to(device)
 
             # compute output
-            loss = model(tokens)
+            loss = model(images)
 
             # measure perplexity and record loss
-            losses.update(loss.item(), tokens.size(0))
+            losses.update(loss.item(), images.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -96,22 +96,22 @@ def fine_tune_train_step(train_loader, model, criterion, optimizer, epoch,
     model.train()
 
     end = time.time()
-    for i, (tokens, target) in enumerate(train_loader):
+    for i, (images, target) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        tokens = tokens.to(device)
+        images = images.to(device)
         target = target.to(device)
 
         # compute output
-        output = model(tokens)
+        output = model(images)
         loss = criterion(output, target)
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), tokens.size(0))
-        top1.update(acc1[0], tokens.size(0))
-        top5.update(acc5[0], tokens.size(0))
+        losses.update(loss.item(), images.size(0))
+        top1.update(acc1[0], images.size(0))
+        top5.update(acc5[0], images.size(0))
 
         # compute gradient
         optimizer.zero_grad()
@@ -145,19 +145,19 @@ def fine_tune_validate_step(val_loader, model, criterion, device, epoch,
 
     with torch.no_grad():
         end = time.time()
-        for i, (tokens, target) in enumerate(val_loader):
-            tokens = tokens.to(device)
+        for i, (images, target) in enumerate(val_loader):
+            images = images.to(device)
             target = target.to(device)
 
             # compute output
-            output = model(tokens)
+            output = model(images)
             loss = criterion(output, target)
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), tokens.size(0))
-            top1.update(acc1[0], tokens.size(0))
-            top5.update(acc5[0], tokens.size(0))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)

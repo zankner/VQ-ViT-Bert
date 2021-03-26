@@ -21,7 +21,7 @@ class LinearClassifier(nn.Module):
         self.classification_head = nn.Linear(embedding_dim, out_dim)
 
     def forward(self, x):
-        embedding = self.transformer(x)
+        embedding = self.transformer(x, compute_codebook=True)
         cls_embedding = embedding[:, 0]
         out = self.classification_head(cls_embedding)
 
