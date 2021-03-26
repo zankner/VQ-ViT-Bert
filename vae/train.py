@@ -33,7 +33,9 @@ def train(args):
     model.eval()
     model.to(device)
 
-    optimizer = optim.Adam(model.parameters(), weight_decay=args.weight_decay)
+    optimizer = optim.Adam(model.parameters(),
+                           lr=args.learning_rate,
+                           weight_decay=args.weight_decay)
 
     scheduler = StepLR(optimizer, step_size=args.step_size)
 

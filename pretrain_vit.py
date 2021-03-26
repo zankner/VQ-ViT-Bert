@@ -27,20 +27,20 @@ if __name__ == "__main__":
 
     # Vae args
     parser.add_argument("--architecture", type=str)
-    parser.add_argument("--embedding_dim", default=256, type=int)
+    parser.add_argument("--num_codebook_indeces", default=1000, type=int)
+    parser.add_argument("--embedding_dim", default=512, type=int)
     parser.add_argument("--num_blocks", default=2, type=int)
     parser.add_argument("--feature_dim", default=64, type=int)
     parser.add_argument("--channels", default=3, type=int)
-    parser.add_argument("--commitment_cost", default=0.6, type=int)
-    parser.add_argument("--num_codebook_indeces", default=1024, type=int)
+    parser.add_argument("--commitment_cost", default=0.5, type=float)
 
     # Vit args
-    parser.add_argument("--vocab_size", default=256, type=int)
+    parser.add_argument("--vocab_size", default=1002, type=int)
     parser.add_argument("--extension", default="pt", type=str)
-    parser.add_argument("--dim", default=1024, type=int)
-    parser.add_argument("--depth", default=8, type=int)
-    parser.add_argument("--heads", default=8, type=int)
-    parser.add_argument("--mlp_dim", default=2048, type=int)
+    parser.add_argument("--dim", default=768, type=int)
+    parser.add_argument("--depth", default=12, type=int)
+    parser.add_argument("--heads", default=12, type=int)
+    parser.add_argument("--mlp_dim", default=3072, type=int)
     parser.add_argument("--dim_head", default=64, type=int)
     parser.add_argument("--dropout", default=0.0, type=float)
     parser.add_argument("--emb_dropout", default=0.0, type=float)
