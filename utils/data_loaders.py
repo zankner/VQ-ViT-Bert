@@ -10,47 +10,58 @@ def get_train_val_loaders(args):
                                      std=[0.229, 0.224, 0.225])
 
     train_transform = transforms.Compose([
-        transforms.RandomCrop(32),
+        transforms.Resize(256),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize,
     ])
     val_transform = transforms.Compose([
-        transforms.CenterCrop(32),
+        transforms.Resize(256),
+        transforms.CenterCrop(256),
         transforms.ToTensor(),
         normalize,
     ])
 
-    train_dataset = datasets.CIFAR10(args.data_dir,
-                                     train=True,
-                                     transform=train_transform,
-                                     download=True)
-    val_dataset = datasets.CIFAR10(args.data_dir,
-                                   train=True,
-                                   transform=val_transform,
-                                   download=True)
+    train_dataset = datasets.ImageNet(args.data_dir,
+                                      split="train",
+                                      transform=train_transform)
+    val_dataset = datasets.ImageNet(args.data_dir,
+                                    split="val",
+                                    transform=val_transform)
 
-    num_train = len(train_dataset)
-    indices = list(range(num_train))
-    split = int(np.floor(args.val_size * num_train))
-    np.random.shuffle(indices)
+    if args.resample_val:
+        num_train = len(train_dataset)
+        indices = list(range(num_train))
+        split = int(np.floor(args.val_size * num_train))
+        np.random.shuffle(indices)
 
-    train_idx, valid_idx = indices[split:], indices[:split]
-    train_sampler = SubsetRandomSampler(train_idx)
-    valid_sampler = SubsetRandomSampler(valid_idx)
+        train_idx, valid_idx = indices[split:], indices[:split]
+        train_sampler = SubsetRandomSampler(train_idx)
+        valid_sampler = SubsetRandomSampler(valid_idx)
 
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        sampler=train_sampler,
-        num_workers=args.num_workers,
-    )
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset,
-        batch_size=args.batch_size,
-        sampler=valid_sampler,
-        num_workers=args.num_workers,
-    )
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_size=args.batch_size,
+            sampler=train_sampler,
+            num_workers=args.num_workers,
+        )
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset,
+            batch_size=args.batch_size,
+            sampler=valid_sampler,
+            num_workers=args.num_workers,
+        )
+    else:
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+        )
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+        )
 
     return train_loader, val_loader
 
