@@ -48,9 +48,9 @@ def pretrain(args):
     mpp.eval()
     mpp.to(device)
 
-    optimizer = optim.Adam(mpp.parameters(),
-                           lr=args.learning_rate,
-                           weight_decay=args.weight_decay)
+    optimizer = optim.AdamW(mpp.parameters(),
+                            lr=args.learning_rate,
+                            weight_decay=args.weight_decay)
 
     scheduler = StepLR(optimizer, step_size=args.step_size)
 
