@@ -6,8 +6,8 @@ if __name__ == "__main__":
 
     # Directory args
     parser.add_argument("--data_dir",
-                        default="./data/ViTBert-Tokens",
-                        help="location tokens dataset is stored",
+                        default="./data/ImageNet",
+                        help="location dataset is stored",
                         type=str)
     parser.add_argument("--vae_ckpt", type=str)
     parser.add_argument("--checkpoint_dir",
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # Training args
     parser.add_argument("--batch_size", default=128, type=int)
-    parser.add_argument("--val_size", default=0.15, type=float)
+    parser.add_argument("--val_size", type=float)
     parser.add_argument("--weight_decay", default=1e-4, type=float)
     parser.add_argument("--learning_rate", default=1e-3, type=float)
     parser.add_argument("--step_size", default=30, type=int)

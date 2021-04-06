@@ -12,6 +12,7 @@ def get_train_val_loaders(args):
 
     train_transform = transforms.Compose([
         transforms.Resize(256),
+        transforms.RandomCrop(256),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize,
@@ -28,7 +29,7 @@ def get_train_val_loaders(args):
     val_dataset = datasets.ImageFolder(os.path.join(args.data_dir, "val"),
                                        transform=val_transform)
 
-    if args.resample_val:
+    if args.val_size:
         num_train = len(train_dataset)
         indices = list(range(num_train))
         split = int(np.floor(args.val_size * num_train))

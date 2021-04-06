@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     # Training args
     parser.add_argument("--batch_size", default=128, type=int)
-    parser.add_argument("--val_size", default=0.15, type=float)
+    parser.add_argument("--val_size", type=float)
     parser.add_argument("--weight_decay", default=1e-4, type=float)
     parser.add_argument("--learning_rate", default=1e-3, type=float)
     parser.add_argument("--step_size", default=30, type=int)
