@@ -1,3 +1,4 @@
+import os
 import torch
 import numpy as np
 from torchvision import transforms
@@ -22,12 +23,10 @@ def get_train_val_loaders(args):
         normalize,
     ])
 
-    train_dataset = datasets.ImageNet(args.data_dir,
-                                      split="train",
-                                      transform=train_transform)
-    val_dataset = datasets.ImageNet(args.data_dir,
-                                    split="val",
-                                    transform=val_transform)
+    train_dataset = datasets.ImageFolder(os.path.join(args.data_dir, "train"),
+                                         transform=train_transform)
+    val_dataset = datasets.ImageFolder(os.path.join(args.data_dir, "val"),
+                                       transform=val_transform)
 
     if args.resample_val:
         num_train = len(train_dataset)
