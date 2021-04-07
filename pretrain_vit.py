@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # Training args
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--val_size", type=float)
-    parser.add_argument("--weight_decay", default=1e-4, type=float)
+    parser.add_argument("--weight_decay", default=3e-2, type=float)
     parser.add_argument("--learning_rate", default=1e-3, type=float)
     parser.add_argument("--step_size", default=30, type=int)
     parser.add_argument("--epochs", default=100, type=int)
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--heads", default=12, type=int)
     parser.add_argument("--mlp_dim", default=3072, type=int)
     parser.add_argument("--dim_head", default=64, type=int)
-    parser.add_argument("--dropout", default=0.0, type=float)
+    parser.add_argument("--dropout", default=0.1, type=float)
     parser.add_argument("--emb_dropout", default=0.0, type=float)
     parser.add_argument("--pad_token_id", default=0, type=int)
     parser.add_argument("--cls_token_id", default=1, type=int)
