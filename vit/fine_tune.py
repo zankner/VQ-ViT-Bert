@@ -61,6 +61,7 @@ def fine_tune(args):
     criterion.to(device)
 
     start_epoch = 1
+    best_loss = None
     for epoch in range(start_epoch, args.epochs + 1):
         fine_tune_train_step(train_loader, classifier, criterion, optimizer,
                              epoch, device, writer, args)
@@ -77,3 +78,13 @@ def fine_tune(args):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': val_loss,
             }, os.path.join(checkpoint_dir, "checkpoint.pt"))
+
+        if not best_loss or val_loss < best_loss:
+            torch.save(
+                {
+                    'epoch': epoch,
+                    'model_state_dict': mpp.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': val_loss,
+                }, os.path.join(checkpoint_dir, "best-checkpoint.pt"))
+            best_loss = val_loss

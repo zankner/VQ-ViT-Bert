@@ -69,7 +69,7 @@ class MPP(nn.Module):
         self.mask_token_id = mask_token_id
         self.cls_token_id = cls_token_id
         self.mask_ignore_token_ids = set(
-            [*mask_ignore_token_ids, pad_token_id])
+            [*mask_ignore_token_ids, pad_token_id, cls_token_id])
         self.num_special_tokens = self.transformer.num_special_tokens
 
     def forward(self, input, **kwargs):
