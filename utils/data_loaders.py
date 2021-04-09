@@ -5,29 +5,55 @@ from torchvision import transforms
 from torchvision import datasets
 from torch.utils.data.sampler import SubsetRandomSampler
 
+CIFAR_TRANSFORM = {"size": 32}
+IMAGENET_TRANSFORM = {"size": 256}
+
 
 def get_train_val_loaders(args):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
+    if args.dataset == "image-net" or args.dataset == "image-net-tar":
+        size = IMAGENET_TRANSFORM["size"]
+    elif args.dataset == "cifar":
+        size = CIFAR_TRANSFORM["size"]
+
     train_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.RandomCrop(256),
+        transforms.Resize(size),
+        transforms.RandomCrop(size),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         normalize,
     ])
     val_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(256),
+        transforms.Resize(size),
+        transforms.CenterCrop(size),
         transforms.ToTensor(),
         normalize,
     ])
 
-    train_dataset = datasets.ImageFolder(os.path.join(args.data_dir, "train"),
-                                         transform=train_transform)
-    val_dataset = datasets.ImageFolder(os.path.join(args.data_dir, "val"),
-                                       transform=val_transform)
+    if args.dataset == "image-net":
+        train_dataset = datasets.ImageFolder(os.path.join(
+            args.data_dir, "train"),
+                                             transform=train_transform)
+        val_dataset = datasets.ImageFolder(os.path.join(args.data_dir, "val"),
+                                           transform=val_transform)
+    elif args.dataset == "image-net-tar":
+        train_dataset = datasets.ImageNet(args.data_dir,
+                                          split="train",
+                                          transform=train_transform)
+        val_dataset = datasets.ImageNet(args.data_dir,
+                                        split="val",
+                                        transform=val_transform)
+    elif args.dataset == "cifar":
+        train_dataset = datasets.CIFAR10(args.data_dir,
+                                         train=True,
+                                         transform=train_transform,
+                                         download=True)
+        val_dataset = datasets.CIFAR10(args.data_dir,
+                                       train=True,
+                                       transform=val_transform,
+                                       download=True)
 
     if args.val_size:
         num_train = len(train_dataset)

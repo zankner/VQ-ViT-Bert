@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument("--print_freq", default=50, type=int)
     parser.add_argument("--seed", default=None, type=int)
     parser.add_argument("--num_workers", default=3, type=int)
+    parser.add_argument("--dataset", default="image-net-tar", type=str)
 
     # Vae args
     parser.add_argument("--architecture", type=str)
