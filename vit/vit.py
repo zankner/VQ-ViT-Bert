@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
-
 class Residual(nn.Module):
     def __init__(self, fn):
         super().__init__()
@@ -56,12 +55,12 @@ class Attention(nn.Module):
         b, n, _, h = *x.shape, self.heads
         qkv = self.to_qkv(x).chunk(3, dim=-1)
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), qkv)
-
-        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+        dots = torch.einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+        dots = dots.requires_grad_().cuda()
 
         attn = dots.softmax(dim=-1)
-
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
+        out = torch.einsum('b h i j, b h j d -> b h i d', attn, v)
+        out = torch.tensor(out).requires_grad_().cuda()
         out = rearrange(out, 'b h n d -> b n (h d)')
         out = self.to_out(out)
         return out

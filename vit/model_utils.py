@@ -27,11 +27,11 @@ def train_step(train_loader, model, optimizer, epoch, device, writer, args):
         loss = model(images)
 
         # measure perplexity and record loss
-        losses.update(loss.item(), images.size(0))
+        losses.update(loss.mean().item(), images.size(0))
 
         # compute gradient
         optimizer.zero_grad()
-        loss.backward()
+        loss.mean().backward()
 
         # do SGD step
         optimizer.step()
@@ -63,7 +63,7 @@ def validate_step(val_loader, model, device, epoch, writer, args):
             loss = model(images)
 
             # measure perplexity and record loss
-            losses.update(loss.item(), images.size(0))
+            losses.update(loss.mean().item(), images.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -109,13 +109,13 @@ def fine_tune_train_step(train_loader, model, criterion, optimizer, epoch,
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images.size(0))
+        losses.update(loss.mean().item(), images.size(0))
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
 
         # compute gradient
         optimizer.zero_grad()
-        loss.backward()
+        loss.mean().backward()
 
         # do SGD step
         optimizer.step()
@@ -155,7 +155,7 @@ def fine_tune_validate_step(val_loader, model, criterion, device, epoch,
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), images.size(0))
+            losses.update(loss.mean().item(), images.size(0))
             top1.update(acc1[0], images.size(0))
             top5.update(acc5[0], images.size(0))
 

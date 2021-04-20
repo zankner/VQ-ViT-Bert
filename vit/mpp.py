@@ -76,7 +76,7 @@ class MPP(nn.Module):
         device = input.device
 
         # convert raw image to tokens
-        codebook_indeces = self.transformer.vae.get_codebook_indices(input)
+        codebook_indeces = self.transformer.vae.module.get_codebook_indices(input)
         codebook_indeces += self.num_special_tokens
         cls_tokens = torch.full((len(input), 1),
                                 self.cls_token_id,

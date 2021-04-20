@@ -14,9 +14,7 @@ from utils import get_train_val_loaders
 
 
 def pretrain(args):
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
+    device = torch.device("cuda:0")
 
     train_loader, val_loader = get_train_val_loaders(args)
 
@@ -29,22 +27,22 @@ def pretrain(args):
     os.mkdir(checkpoint_dir)
 
     if args.architecture == "dall-e":
-        vae = OpenAIDiscreteVAE()
+        vae = nn.DataParallel(OpenAIDiscreteVAE()).cuda()
     else:
         assert args.vae_ckpt != None, "Vae checkpoint must be specified when loading a custom trained VAE"
 
-        vae = VQVae(args.num_codebook_indeces, args.embedding_dim,
-                    args.num_blocks, args.feature_dim, args.channels)
+        vae = nn.DataParallel(VQVae(args.num_codebook_indeces, args.embedding_dim,
+                    args.num_blocks, args.feature_dim, args.channels)).cuda()
         ckpt_dir = os.path.join(args.vae_ckpt, "checkpoint.pt")
         vae_ckpt = torch.load(ckpt_dir)['model_state_dict']
         vae.load_state_dict(vae_ckpt)
 
     transformer = ViT(vae, args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.num_codebook_indeces,
-                      args.dim_head, args.dropout, args.emb_dropout)
-    mpp = MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
+                      args.dim_head, args.dropout, args.emb_dropout).cuda()
+    mpp = nn.DataParallel(MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
               args.replace_prob, args.random_token_prob, args.mask_token_id,
-              args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)
+              args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)).cuda()
     mpp.eval()
     mpp.to(device)
 
@@ -69,7 +67,7 @@ def pretrain(args):
         torch.save(
             {
                 'epoch': epoch,
-                'model_state_dict': mpp.state_dict(),
+                'model_state_dict': mpp.module.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': val_loss,
             }, os.path.join(checkpoint_dir, "checkpoint.pt"))
@@ -78,7 +76,7 @@ def pretrain(args):
             torch.save(
                 {
                     'epoch': epoch,
-                    'model_state_dict': mpp.state_dict(),
+                    'model_state_dict': mpp.module.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'loss': val_loss,
                 }, os.path.join(checkpoint_dir, "best-checkpoint.pt"))
