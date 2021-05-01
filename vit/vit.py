@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
+
 class Residual(nn.Module):
     def __init__(self, fn):
         super().__init__()
@@ -131,7 +132,7 @@ class ViT(nn.Module):
         device = x.device
 
         if compute_codebook:
-            codebook_indeces = self.vae.get_codebook_indices(x)
+            codebook_indeces = self.vae.module.get_codebook_indices(x)
             codebook_indeces += self.num_special_tokens
             cls_tokens = torch.full((len(x), 1),
                                     self.cls_token_id,
