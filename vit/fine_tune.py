@@ -12,9 +12,7 @@ from utils import get_train_val_loaders
 
 
 def fine_tune(args):
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
+    device = "cuda"
 
     train_loader, val_loader = get_train_val_loaders(args)
 
@@ -39,11 +37,12 @@ def fine_tune(args):
               args.replace_prob, args.random_token_prob, args.mask_token_id,
               args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)
 
-    ckpt_dir = os.path.join(args.mpp_ckpt, "checkpoint.pt")
+    ckpt_dir = os.path.join(args.mpp_ckpt, "best-checkpoint.pt")
     mpp_ckpt = torch.load(ckpt_dir)['model_state_dict']
     mpp.load_state_dict(mpp_ckpt)
 
-    classifier = LinearClassifier(mpp.transformer, args.dim, args.out_dim)
+    classifier = nn.DataParallel(
+        LinearClassifier(mpp.transformer, args.dim, args.out_dim))
     classifier.eval()
     classifier.to(device)
 
@@ -61,30 +60,30 @@ def fine_tune(args):
     criterion.to(device)
 
     start_epoch = 1
-    best_loss = None
+    best_acc = 0
     for epoch in range(start_epoch, args.epochs + 1):
         fine_tune_train_step(train_loader, classifier, criterion, optimizer,
                              epoch, device, writer, args)
         scheduler.step()
 
-        val_loss = fine_tune_validate_step(val_loader, classifier, criterion,
-                                           device, epoch, writer, args)
+        val_acc = fine_tune_validate_step(val_loader, classifier, criterion,
+                                          device, epoch, writer, args)
 
         # Checkpoint model
         torch.save(
             {
                 'epoch': epoch,
-                'model_state_dict': classifier.state_dict(),
+                'model_state_dict': classifier.module.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': val_loss,
+                'acc': val_acc,
             }, os.path.join(checkpoint_dir, "checkpoint.pt"))
 
-        if not best_loss or val_loss < best_loss:
+        if val_acc > best_acc:
             torch.save(
                 {
                     'epoch': epoch,
-                    'model_state_dict': mpp.state_dict(),
+                    'model_state_dict': classifier.module.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'loss': val_loss,
+                    'loss': val_acc,
                 }, os.path.join(checkpoint_dir, "best-checkpoint.pt"))
-            best_loss = val_loss
+            best_acc = val_acc
