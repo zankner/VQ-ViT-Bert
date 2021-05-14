@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.tensorboard import SummaryWriter
 from vit import ViT, LinearClassifier, MPP
 from vit.model_utils import fine_tune_train_step, fine_tune_validate_step
-from vae import VQVae, OpenAIDiscreteVAE
+from vae import VQVae, OpenAIDiscreteVAE, VQGanVAE1024
 from utils import get_train_val_loaders
 
 
@@ -26,6 +26,8 @@ def fine_tune(args):
 
     if args.architecture == "dall-e":
         vae = OpenAIDiscreteVAE()
+    elif args.architecture == "vq-gan":
+        vae = VQGanVAE1024()
     else:
         vae = VQVae(args.num_codebook_indeces, args.embedding_dim,
                     args.num_blocks, args.feature_dim, args.channels)

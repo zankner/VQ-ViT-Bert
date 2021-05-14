@@ -9,7 +9,7 @@ from torchvision import datasets
 from vit import ViT
 from vit import MPP
 from vit.model_utils import train_step, validate_step
-from vae import VQVae, OpenAIDiscreteVAE
+from vae import VQVae, OpenAIDiscreteVAE, VQGanVAE1024
 from utils import get_train_val_loaders
 
 
@@ -27,12 +27,15 @@ def pretrain(args):
     os.mkdir(checkpoint_dir)
 
     if args.architecture == "dall-e":
-        vae = nn.DataParallel(OpenAIDiscreteVAE()).cuda()
+        vae = OpenAIDiscreteVAE()
+    elif args.architecture == "vq-gan":
+        vae = VQGanVAE1024()
     else:
         assert args.vae_ckpt != None, "Vae checkpoint must be specified when loading a custom trained VAE"
 
-        vae = nn.DataParallel(VQVae(args.num_codebook_indeces, args.embedding_dim,
-                    args.num_blocks, args.feature_dim, args.channels)).cuda()
+        vae = nn.DataParallel(
+            VQVae(args.num_codebook_indeces, args.embedding_dim,
+                  args.num_blocks, args.feature_dim, args.channels)).cuda()
         ckpt_dir = os.path.join(args.vae_ckpt, "checkpoint.pt")
         vae_ckpt = torch.load(ckpt_dir)['model_state_dict']
         vae.load_state_dict(vae_ckpt)
@@ -40,9 +43,11 @@ def pretrain(args):
     transformer = ViT(vae, args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.num_codebook_indeces,
                       args.dim_head, args.dropout, args.emb_dropout).cuda()
-    mpp = nn.DataParallel(MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
-              args.replace_prob, args.random_token_prob, args.mask_token_id,
-              args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)).cuda()
+    mpp = nn.DataParallel(
+        MPP(transformer, args.vocab_size, args.dim, args.mask_prob,
+            args.replace_prob, args.random_token_prob, args.mask_token_id,
+            args.pad_token_id, args.cls_token_id,
+            args.mask_ignore_token_ids)).cuda()
     mpp.eval()
     mpp.to(device)
 
