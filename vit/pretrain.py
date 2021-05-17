@@ -27,9 +27,9 @@ def pretrain(args):
     os.mkdir(checkpoint_dir)
 
     if args.architecture == "dall-e":
-        vae = OpenAIDiscreteVAE()
+        vae = nn.DataParallel(OpenAIDiscreteVAE())
     elif args.architecture == "vq-gan":
-        vae = VQGanVAE1024()
+        vae = nn.DataParallel(VQGanVAE1024())
     else:
         assert args.vae_ckpt != None, "Vae checkpoint must be specified when loading a custom trained VAE"
 

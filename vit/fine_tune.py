@@ -25,12 +25,13 @@ def fine_tune(args):
     os.mkdir(checkpoint_dir)
 
     if args.architecture == "dall-e":
-        vae = OpenAIDiscreteVAE()
+        vae = nn.DataParallel(OpenAIDiscreteVAE())
     elif args.architecture == "vq-gan":
-        vae = VQGanVAE1024()
+        vae = nn.DataParallel(VQGanVAE1024())
     else:
-        vae = VQVae(args.num_codebook_indeces, args.embedding_dim,
-                    args.num_blocks, args.feature_dim, args.channels)
+        vae = nn.DataParallel(
+            VQVae(args.num_codebook_indeces, args.embedding_dim,
+                  args.num_blocks, args.feature_dim, args.channels))
 
     transformer = ViT(vae, args.dim, args.depth, args.heads, args.mlp_dim,
                       args.vocab_size, args.num_codebook_indeces,
