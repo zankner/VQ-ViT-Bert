@@ -40,8 +40,7 @@ def fine_tune(args):
               args.replace_prob, args.random_token_prob, args.mask_token_id,
               args.pad_token_id, args.cls_token_id, args.mask_ignore_token_ids)
 
-    ckpt_dir = os.path.join(args.mpp_ckpt, "best-checkpoint.pt")
-    mpp_ckpt = torch.load(ckpt_dir)['model_state_dict']
+    mpp_ckpt = torch.load(args.mpp_ckpt)['model_state_dict']
     mpp.load_state_dict(mpp_ckpt)
 
     classifier = nn.DataParallel(
@@ -50,7 +49,7 @@ def fine_tune(args):
     classifier.to(device)
 
     if args.freeze_transformer:
-        params = classifier.classification_head.parameters()
+        params = classifier.module.classification_head.parameters()
     else:
         params = classifier.parameters()
     optimizer = optim.Adam(params,

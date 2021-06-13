@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--summary_dir", default="./vit_runs", type=str)
 
     # Training args
+    parser.add_argument("--random_state", type=int)
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--val_size", type=float)
     parser.add_argument("--weight_decay", default=3e-2, type=float)

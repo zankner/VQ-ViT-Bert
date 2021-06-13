@@ -20,8 +20,7 @@ def get_train_val_loaders(args):
 
     train_transform = transforms.Compose([
         transforms.Resize(size),
-        transforms.RandomCrop(size),
-        transforms.RandomHorizontalFlip(),
+        transforms.CenterCrop(size),
         transforms.ToTensor(),
         normalize,
     ])
@@ -59,7 +58,12 @@ def get_train_val_loaders(args):
         num_train = len(train_dataset)
         indices = list(range(num_train))
         split = int(np.floor(args.val_size * num_train))
-        np.random.shuffle(indices)
+
+        if args.random_state != None:
+            rng = np.random.RandomState(args.random_state)
+            rng.shuffle(indices)
+        else:
+            np.random.shuffle(indices)
 
         train_idx, valid_idx = indices[split:], indices[:split]
         train_sampler = SubsetRandomSampler(train_idx)

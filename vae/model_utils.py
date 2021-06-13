@@ -8,9 +8,10 @@ def train_step(train_loader, model, criterion, optimizer, epoch, device,
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
+    perplexities = AverageMeter('Perplexity', ':.4e')
 
     progress = ProgressMeter(len(train_loader),
-                             [batch_time, data_time, losses],
+                             [batch_time, data_time, losses, perplexities],
                              prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
@@ -24,11 +25,12 @@ def train_step(train_loader, model, criterion, optimizer, epoch, device,
         images = images.to(device)
 
         # compute output
-        output, vq_loss = model(images)
+        output, vq_loss, perplexity = model(images)
         loss = criterion(output, images) + vq_loss
 
         # measure perplexity and record loss
         losses.update(loss.item(), images.size(0))
+        perplexities.update(perplexity.item(), images.size(0))
 
         # compute gradient
         optimizer.zero_grad()
@@ -42,14 +44,16 @@ def train_step(train_loader, model, criterion, optimizer, epoch, device,
         end = time.time()
         if (i + 1) % args.print_freq == 0:
             progress.display(i + 1)
-            writer.add_scalar('training_loss', losses.avg,
-                              epoch * len(train_loader) + i)
+    writer.add_scalar('loss/train', losses.avg, epoch)
+    writer.add_scalar('perlexity/train', perplexities.avg, epoch)
 
 
-def validate_step(val_loader, model, criterion, device, args):
+def validate_step(val_loader, model, criterion, device, epoch, writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
-    progress = ProgressMeter(len(val_loader), [batch_time, losses],
+    perplexities = AverageMeter('Perplexity', ':.4e')
+    progress = ProgressMeter(len(val_loader),
+                             [batch_time, losses, perplexities],
                              prefix='Test: ')
 
     # switch to evaluate mode
@@ -62,11 +66,12 @@ def validate_step(val_loader, model, criterion, device, args):
             target = target.to(device)
 
             # compute output
-            output, vq_loss = model(images)
+            output, vq_loss, perplexity = model(images)
             loss = criterion(output, images) + vq_loss
 
             # measure perplexity and record loss
             losses.update(loss.item(), images.size(0))
+            perplexities.update(perplexity.item(), images.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -78,4 +83,6 @@ def validate_step(val_loader, model, criterion, device, args):
         # TODO: this should also be done with the ProgressMeter
         print(' * Loss {losses.avg:.3f}'.format(losses=losses))
 
+    writer.add_scalar('loss/val', losses.avg, epoch)
+    writer.add_scalar('perlexity/val', perplexities.avg, epoch)
     return losses.avg

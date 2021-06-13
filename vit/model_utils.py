@@ -41,8 +41,7 @@ def train_step(train_loader, model, optimizer, epoch, device, writer, args):
         end = time.time()
         if (i + 1) % args.print_freq == 0:
             progress.display(i + 1)
-            writer.add_scalar('training_loss', losses.avg,
-                              epoch * len(train_loader) + i)
+    writer.add_scalar('loss/train', losses.avg, epoch)
 
 
 def validate_step(val_loader, model, device, epoch, writer, args):
@@ -71,13 +70,13 @@ def validate_step(val_loader, model, device, epoch, writer, args):
 
             if i % args.print_freq == 0:
                 progress.display(i)
-                writer.add_scalar('validation_loss', losses.avg,
-                                  epoch * len(val_loader) + i)
 
         # TODO: this should also be done with the ProgressMeter
         print(' * Loss {losses.avg:.3f}'.format(losses=losses))
 
-        return losses.avg
+    writer.add_scalar('loss/val', losses.avg, epoch)
+
+    return losses.avg
 
 
 def fine_tune_train_step(train_loader, model, criterion, optimizer, epoch,
@@ -125,10 +124,8 @@ def fine_tune_train_step(train_loader, model, criterion, optimizer, epoch,
         end = time.time()
         if (i + 1) % args.print_freq == 0:
             progress.display(i + 1)
-            writer.add_scalar('train_acc_1', top1.avg,
-                              epoch * len(train_loader) + i)
-            writer.add_scalar('train_acc_5', top5.avg,
-                              epoch * len(train_loader) + i)
+    writer.add_scalar('acc_1/train', top1.avg, epoch)
+    writer.add_scalar('acc_5/train', top5.avg, epoch)
 
 
 def fine_tune_validate_step(val_loader, model, criterion, device, epoch,
@@ -165,13 +162,12 @@ def fine_tune_validate_step(val_loader, model, criterion, device, epoch,
 
             if i % args.print_freq == 0:
                 progress.display(i)
-                writer.add_scalar('val_acc_1', top1.avg,
-                                  epoch * len(val_loader) + i)
-                writer.add_scalar('val_acc_5', top5.avg,
-                                  epoch * len(val_loader) + i)
 
         # TODO: this should also be done with the ProgressMeter
         print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'.format(top1=top1,
                                                                     top5=top5))
+
+    writer.add_scalar('acc_1/val', top1.avg, epoch)
+    writer.add_scalar('acc_5/val', top5.avg, epoch)
 
     return top1.avg

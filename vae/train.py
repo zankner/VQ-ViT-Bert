@@ -43,12 +43,14 @@ def train(args):
     criterion.to(device)
 
     start_epoch = 1
+    best_loss = None
     for epoch in range(start_epoch, args.epochs + 1):
         train_step(train_loader, model, criterion, optimizer, epoch, device,
                    writer, args)
         scheduler.step()
 
-        val_loss = validate_step(val_loader, model, criterion, device, args)
+        val_loss = validate_step(val_loader, model, criterion, device, epoch,
+                                 writer, args)
 
         # Checkpoint model
         torch.save(
@@ -58,3 +60,12 @@ def train(args):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': val_loss,
             }, os.path.join(checkpoint_dir, "checkpoint.pt"))
+
+        if best_loss == None or val_loss < best_loss:
+            torch.save(
+                {
+                    'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'loss': val_loss,
+                }, os.path.join(checkpoint_dir, "best-checkpoint.pt"))

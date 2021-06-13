@@ -77,28 +77,28 @@ class Encoder(nn.Module):
                                 2 * feature_dim)) for i in range(num_blocks)],
                          ('pool', nn.MaxPool2d(kernel_size=2))
                      ]))),
-                ('group_3',
-                 nn.Sequential(
-                     OrderedDict([
-                         *[(f'block_{i+1}',
-                            ResBlock(
-                                2 * feature_dim if i == 0 else 4 * feature_dim,
-                                4 * feature_dim)) for i in range(num_blocks)],
-                         ('pool', nn.MaxPool2d(kernel_size=2))
-                     ]))),
-                ('group_4',
-                 nn.Sequential(
-                     OrderedDict([
-                         *[(f'block_{i+1}',
-                            ResBlock(
-                                4 * feature_dim if i == 0 else 8 * feature_dim,
-                                8 * feature_dim)) for i in range(num_blocks)],
-                         ('pool', nn.MaxPool2d(kernel_size=2))
-                     ])))
+                # ('group_3',
+                #  nn.Sequential(
+                #      OrderedDict([
+                #          *[(f'block_{i+1}',
+                #             ResBlock(
+                #                 2 * feature_dim if i == 0 else 4 * feature_dim,
+                #                 4 * feature_dim)) for i in range(num_blocks)],
+                #          ('pool', nn.MaxPool2d(kernel_size=2))
+                #      ]))),
+                # ('group_4',
+                #  nn.Sequential(
+                #      OrderedDict([
+                #          *[(f'block_{i+1}',
+                #             ResBlock(
+                #                 4 * feature_dim if i == 0 else 8 * feature_dim,
+                #                 8 * feature_dim)) for i in range(num_blocks)],
+                #          ('pool', nn.MaxPool2d(kernel_size=2))
+                #      ])))
             ]))
 
         # Output conv
-        self.output_conv = nn.Conv2d(8 * feature_dim,
+        self.output_conv = nn.Conv2d(2 * feature_dim,
                                      embedding_dim,
                                      kernel_size=1)
 
@@ -125,37 +125,37 @@ class Decoder(nn.Module):
 
         # Input conv
         self.input_conv = nn.Conv2d(embedding_dim,
-                                    feature_dim * 8,
+                                    feature_dim * 2,
                                     kernel_size=1)
 
         # Blocks
         self.blocks = nn.Sequential(
             OrderedDict([
-                ('group_1',
-                 nn.Sequential(
-                     OrderedDict([
-                         *[(f'block_{i+1}',
-                            ResBlock(8 * feature_dim, 8 * feature_dim))
-                           for i in range(num_blocks)],
-                         ('upsample',
-                          nn.Upsample(scale_factor=2, mode="nearest"))
-                     ]))),
-                ('group_2',
-                 nn.Sequential(
-                     OrderedDict([
-                         *[(f'block_{i+1}',
-                            ResBlock(
-                                8 * feature_dim if i == 0 else 4 * feature_dim,
-                                4 * feature_dim)) for i in range(num_blocks)],
-                         ('upsample',
-                          nn.Upsample(scale_factor=2, mode="nearest"))
-                     ]))),
+                # ('group_1',
+                #  nn.Sequential(
+                #      OrderedDict([
+                #          *[(f'block_{i+1}',
+                #             ResBlock(8 * feature_dim, 8 * feature_dim))
+                #            for i in range(num_blocks)],
+                #          ('upsample',
+                #           nn.Upsample(scale_factor=2, mode="nearest"))
+                #      ]))),
+                # ('group_2',
+                #  nn.Sequential(
+                #      OrderedDict([
+                #          *[(f'block_{i+1}',
+                #             ResBlock(
+                #                 8 * feature_dim if i == 0 else 4 * feature_dim,
+                #                 4 * feature_dim)) for i in range(num_blocks)],
+                #          ('upsample',
+                #           nn.Upsample(scale_factor=2, mode="nearest"))
+                #      ]))),
                 ('group_3',
                  nn.Sequential(
                      OrderedDict([
                          *[(f'block_{i+1}',
                             ResBlock(
-                                4 * feature_dim if i == 0 else 2 * feature_dim,
+                                2 * feature_dim if i == 0 else 2 * feature_dim,
                                 2 * feature_dim)) for i in range(num_blocks)],
                          ('upsample',
                           nn.Upsample(scale_factor=2, mode="nearest"))
@@ -198,7 +198,8 @@ class VectorQuantizer(nn.Module):
         self._embedding_dim = embedding_dim
         self._num_codebook_indeces = num_codebook_indeces
 
-        self._embedding = nn.Embedding(self._num_codebook_indeces, self._embedding_dim)
+        self._embedding = nn.Embedding(self._num_codebook_indeces,
+                                       self._embedding_dim)
         self._embedding.weight.data.uniform_(-1 / self._num_codebook_indeces,
                                              1 / self._num_codebook_indeces)
         self._commitment_cost = commitment_cost
@@ -269,10 +270,10 @@ class VQVae(nn.Module):
 
     def forward(self, x):
         x = self.encoder(x)
-        vq_loss, vq_z, _, _ = self.vector_quantizer(x)
+        vq_loss, vq_z, perplexity, _ = self.vector_quantizer(x)
         out = self.decoder(vq_z)
 
-        return out, vq_loss
+        return out, vq_loss, perplexity
 
     @torch.no_grad()
     def get_codebook_indices(self, x):
