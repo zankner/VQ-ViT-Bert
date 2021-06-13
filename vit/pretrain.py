@@ -61,10 +61,17 @@ def pretrain(args):
     criterion = nn.CrossEntropyLoss()
     criterion.to(device)
 
+    train_grads = [[] for _, p in mpp.module.transformer.named_parameters()
+                   if p.requires_grad]
+
     start_epoch = 1
     best_loss = None
     for epoch in range(start_epoch, args.epochs + 1):
-        train_step(train_loader, mpp, optimizer, epoch, device, writer, args)
+        epoch_grads = train_step(train_loader, mpp, optimizer, epoch, device,
+                                 writer, args)
+        for layer_grad, trajectory_grad in zip(epoch_grads, train_grads):
+            trajectory_grad.append(layer_grad)
+
         scheduler.step()
 
         val_loss = validate_step(val_loader, mpp, device, epoch, writer, args)

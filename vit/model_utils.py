@@ -8,6 +8,11 @@ def train_step(train_loader, model, optimizer, epoch, device, writer, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
+    grads = [
+        AverageMeter(n, ':.4e')
+        for n, p in model.module.transformer.named_parameters()
+        if p.requires_grad
+    ]
 
     progress = ProgressMeter(len(train_loader),
                              [batch_time, data_time, losses],
@@ -33,6 +38,15 @@ def train_step(train_loader, model, optimizer, epoch, device, writer, args):
         optimizer.zero_grad()
         loss.mean().backward()
 
+        # record gradients
+        grad_params = [
+            p for n, p in model.module.transformer.named_parameters()
+            if p.requires_grad
+        ]
+        for p, meter in zip(grad_params, grads):
+            grad_norm = torch.norm(p)
+            meter.update(grad_norm.cpu(), images.size(0))
+
         # do SGD step
         optimizer.step()
 
@@ -42,6 +56,10 @@ def train_step(train_loader, model, optimizer, epoch, device, writer, args):
         if (i + 1) % args.print_freq == 0:
             progress.display(i + 1)
     writer.add_scalar('loss/train', losses.avg, epoch)
+
+    list_grads = [meter.avg for meter in grads]
+
+    return list_grads
 
 
 def validate_step(val_loader, model, device, epoch, writer, args):
